@@ -2531,7 +2531,7 @@
             if (autoAttackEnabled && enemies.length > 0 && player.attackCooldown === 0) {
                 // 가장 가까운 적 찾기
                 let closestEnemy = null;
-                let closestDist = player.attackRange + 50;
+                let closestDist = player.attackRange + 80;
 
                 enemies.forEach(enemy => {
                     const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
@@ -2542,14 +2542,16 @@
                 });
 
                 // 공격 범위 내에 적이 있으면 자동 공격
-                if (closestEnemy && closestDist < player.attackRange + 30) {
-                    // 적 방향으로 바라보기
-                    const dirX = closestEnemy.x - player.x;
-                    const dirY = closestEnemy.y - player.y;
-                    const len = Math.hypot(dirX, dirY);
-                    if (len > 0) {
-                        player.direction.x = dirX / len;
-                        player.direction.y = dirY / len;
+                if (closestEnemy && closestDist < player.attackRange + 50) {
+                    // 이동 중이 아닐 때만 적 방향으로 바라보기
+                    if (dx === 0 && dy === 0) {
+                        const dirX = closestEnemy.x - player.x;
+                        const dirY = closestEnemy.y - player.y;
+                        const len = Math.hypot(dirX, dirY);
+                        if (len > 0) {
+                            player.direction.x = dirX / len;
+                            player.direction.y = dirY / len;
+                        }
                     }
                     attack();
                 }

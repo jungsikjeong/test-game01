@@ -522,80 +522,43 @@
             }
         }
 
-        /* 세로모드 최적화 */
+        /* 세로모드 회전 안내 */
+        #rotateNotice {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+        #rotateNotice .rotate-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: rotateAnim 2s ease-in-out infinite;
+        }
+        #rotateNotice .rotate-text {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        #rotateNotice .rotate-sub {
+            font-size: 14px;
+            color: #888;
+        }
+        @keyframes rotateAnim {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+        }
+
         @media (max-width: 1024px) and (pointer: coarse) and (orientation: portrait) {
-            #gameContainer {
-                flex-direction: column;
-            }
-            canvas {
-                width: 100vw !important;
-                height: auto !important;
-                max-height: 55vh;
-            }
-            #mobileControls {
-                position: fixed;
-                bottom: 0;
-                height: 45vh;
-                background: rgba(20, 20, 40, 0.95);
-                border-top: 2px solid #4a4a6a;
-            }
-            #joystickArea {
-                left: 30px;
-                bottom: 50px;
-            }
-            #mobileButtons {
-                right: 30px;
-                bottom: 50px;
-                gap: 15px;
-            }
-            #mobileSkills {
-                gap: 10px;
-            }
-            .mobile-btn {
-                width: 58px;
-                height: 58px;
-            }
-            .mobile-btn.attack-btn {
-                width: 75px;
-                height: 75px;
-                font-size: 30px;
-            }
-            .mobile-skill {
-                width: 52px;
-                height: 52px;
-            }
-            #ui {
-                font-size: 10px;
-                padding: 5px;
-                max-width: 120px;
-            }
-            #villageHP {
-                font-size: 11px;
-                padding: 4px 8px;
-            }
-            #villageHPBar {
-                width: 100px;
-                height: 8px;
-            }
-            #bossHP {
-                bottom: auto;
-                top: 80px;
-                font-size: 11px;
-            }
-            #bossHPBar {
-                width: 150px;
-                height: 10px;
-            }
-            #buffIndicator {
-                top: auto;
-                bottom: 46vh;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 11px;
-                text-align: center;
-                background: rgba(0,0,0,0.6);
-                padding: 3px 8px;
-                border-radius: 4px;
+            #rotateNotice {
+                display: flex;
             }
         }
 
@@ -666,6 +629,13 @@
     </style>
 </head>
 <body>
+    <!-- 세로모드 회전 안내 -->
+    <div id="rotateNotice">
+        <div class="rotate-icon">📱</div>
+        <div class="rotate-text">화면을 가로로 회전해주세요</div>
+        <div class="rotate-sub">Please rotate your device</div>
+    </div>
+
     <div id="gameContainer">
         <canvas id="game" width="1000" height="700"></canvas>
 

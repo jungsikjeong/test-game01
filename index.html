@@ -383,6 +383,174 @@
             50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
+
+        /* 모바일 터치 컨트롤 */
+        #mobileControls {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            pointer-events: none;
+            z-index: 50;
+        }
+        #joystickArea {
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
+            width: 140px;
+            height: 140px;
+            pointer-events: auto;
+        }
+        #joystickBase {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            left: 10px;
+            top: 10px;
+        }
+        #joystickThumb {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            left: 45px;
+            top: 45px;
+            transition: none;
+        }
+        #mobileButtons {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: auto;
+        }
+        #mobileSkills {
+            display: flex;
+            gap: 8px;
+        }
+        .mobile-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            background: rgba(50, 50, 80, 0.8);
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .mobile-btn:active {
+            transform: scale(0.9);
+            background: rgba(100, 100, 150, 0.9);
+        }
+        .mobile-btn.attack-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 32px;
+            background: rgba(200, 50, 50, 0.8);
+            border-color: rgba(255, 100, 100, 0.6);
+        }
+        .mobile-skill {
+            width: 50px;
+            height: 50px;
+            font-size: 18px;
+        }
+        .mobile-skill.cooldown {
+            opacity: 0.4;
+            background: rgba(30, 30, 50, 0.8);
+        }
+
+        /* 모바일 반응형 */
+        @media (max-width: 1024px) and (pointer: coarse) {
+            #mobileControls {
+                display: block;
+            }
+            #instructions {
+                display: none;
+            }
+            #skillBar {
+                display: none;
+            }
+            body {
+                overflow: hidden;
+                touch-action: none;
+            }
+            #gameContainer {
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            canvas {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .class-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .class-card {
+                width: 90%;
+                max-width: 280px;
+            }
+            #classSelect h1 {
+                font-size: 28px;
+            }
+            #ui {
+                font-size: 11px;
+                padding: 6px;
+            }
+            #villageHP {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+            #villageHPBar {
+                width: 120px;
+            }
+            .mobile-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            .mobile-btn.attack-btn {
+                width: 65px;
+                height: 65px;
+                font-size: 26px;
+            }
+            .mobile-skill {
+                width: 42px;
+                height: 42px;
+                font-size: 14px;
+            }
+            #joystickBase {
+                width: 100px;
+                height: 100px;
+            }
+            #joystickThumb {
+                width: 40px;
+                height: 40px;
+                left: 40px;
+                top: 40px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -484,6 +652,23 @@
             <button id="restart">다시 시작</button>
         </div>
         <div id="instructions">방향키: 이동 | Space: 공격 | QWER: 스킬 | M: 음악</div>
+
+        <!-- 모바일 터치 컨트롤 -->
+        <div id="mobileControls">
+            <div id="joystickArea">
+                <div id="joystickBase"></div>
+                <div id="joystickThumb"></div>
+            </div>
+            <div id="mobileButtons">
+                <div id="mobileSkills">
+                    <button class="mobile-btn mobile-skill" id="mobileQ">Q</button>
+                    <button class="mobile-btn mobile-skill" id="mobileW">W</button>
+                    <button class="mobile-btn mobile-skill" id="mobileE">E</button>
+                    <button class="mobile-btn mobile-skill" id="mobileR">R</button>
+                </div>
+                <button class="mobile-btn attack-btn" id="mobileAttack">⚔️</button>
+            </div>
+        </div>
         <button id="bgmToggle" style="position:absolute;top:10px;right:10px;padding:8px 12px;background:#4a4a8a;border:2px solid #6a6a9a;border-radius:6px;color:white;cursor:pointer;font-size:12px;">🎵 BGM ON</button>
         <div id="skillBar">
             <div class="skill" id="skillQ">
@@ -1085,6 +1270,107 @@
 
         document.getElementById('closeShop').addEventListener('click', closeShop);
         document.getElementById('restart').addEventListener('click', restartGame);
+
+        // 모바일 터치 컨트롤
+        const joystickArea = document.getElementById('joystickArea');
+        const joystickThumb = document.getElementById('joystickThumb');
+        const joystickBase = document.getElementById('joystickBase');
+        let joystickActive = false;
+        let joystickCenter = { x: 0, y: 0 };
+        const joystickMaxDist = 45;
+
+        function handleJoystickStart(e) {
+            e.preventDefault();
+            joystickActive = true;
+            const rect = joystickBase.getBoundingClientRect();
+            joystickCenter.x = rect.left + rect.width / 2;
+            joystickCenter.y = rect.top + rect.height / 2;
+            handleJoystickMove(e);
+        }
+
+        function handleJoystickMove(e) {
+            if (!joystickActive) return;
+            e.preventDefault();
+
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - joystickCenter.x;
+            const dy = touch.clientY - joystickCenter.y;
+            const dist = Math.min(Math.hypot(dx, dy), joystickMaxDist);
+            const angle = Math.atan2(dy, dx);
+
+            const thumbX = Math.cos(angle) * dist;
+            const thumbY = Math.sin(angle) * dist;
+
+            joystickThumb.style.left = (45 + thumbX) + 'px';
+            joystickThumb.style.top = (45 + thumbY) + 'px';
+
+            // 키 입력 시뮬레이션
+            keys['ArrowLeft'] = dx < -15;
+            keys['ArrowRight'] = dx > 15;
+            keys['ArrowUp'] = dy < -15;
+            keys['ArrowDown'] = dy > 15;
+        }
+
+        function handleJoystickEnd(e) {
+            e.preventDefault();
+            joystickActive = false;
+            joystickThumb.style.left = '45px';
+            joystickThumb.style.top = '45px';
+            keys['ArrowLeft'] = false;
+            keys['ArrowRight'] = false;
+            keys['ArrowUp'] = false;
+            keys['ArrowDown'] = false;
+        }
+
+        joystickArea.addEventListener('touchstart', handleJoystickStart, { passive: false });
+        joystickArea.addEventListener('touchmove', handleJoystickMove, { passive: false });
+        joystickArea.addEventListener('touchend', handleJoystickEnd, { passive: false });
+        joystickArea.addEventListener('touchcancel', handleJoystickEnd, { passive: false });
+
+        // 모바일 버튼 이벤트
+        document.getElementById('mobileAttack').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameState === 'playing') attack();
+        }, { passive: false });
+
+        document.getElementById('mobileQ').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameState === 'playing') skillQ();
+        }, { passive: false });
+
+        document.getElementById('mobileW').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameState === 'playing') skillW();
+        }, { passive: false });
+
+        document.getElementById('mobileE').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameState === 'playing') skillE();
+        }, { passive: false });
+
+        document.getElementById('mobileR').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameState === 'playing') skillR();
+        }, { passive: false });
+
+        // 모바일 스킬 쿨다운 UI 업데이트
+        function updateMobileSkillUI() {
+            ['Q', 'W', 'E', 'R'].forEach(key => {
+                const btn = document.getElementById('mobile' + key);
+                const skill = player.skills[key];
+                if (skill.cooldown > 0) {
+                    btn.classList.add('cooldown');
+                    btn.textContent = Math.ceil(skill.cooldown / 60);
+                } else {
+                    btn.classList.remove('cooldown');
+                    btn.textContent = key;
+                }
+            });
+        }
+
+        // 캔버스 터치 이벤트 방지 (스크롤 방지)
+        canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+        canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
         function updateShopButtons() {
             document.getElementById('buyAttack').textContent = `공격력 +8 (${player.attackCost}G) [현재: ${player.attack}]`;
@@ -2944,6 +3230,18 @@
                 } else {
                     elem.classList.add('ready');
                     cdElem.textContent = '';
+                }
+
+                // 모바일 스킬 버튼 업데이트
+                const mobileBtn = document.getElementById('mobile' + key);
+                if (mobileBtn) {
+                    if (skill.cooldown > 0) {
+                        mobileBtn.classList.add('cooldown');
+                        mobileBtn.textContent = Math.ceil(skill.cooldown / 60);
+                    } else {
+                        mobileBtn.classList.remove('cooldown');
+                        mobileBtn.textContent = key;
+                    }
                 }
             });
         }

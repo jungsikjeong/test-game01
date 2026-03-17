@@ -562,6 +562,176 @@
             }
         }
 
+        /* 모바일 가로모드 최적화 */
+        @media (max-height: 450px) and (pointer: coarse),
+               (max-width: 900px) and (max-height: 500px) {
+            #classSelect {
+                padding: 10px;
+                overflow-y: auto;
+            }
+            #classSelect h1 {
+                font-size: 20px;
+                margin-bottom: 5px;
+            }
+            #classSelect .subtitle {
+                font-size: 11px;
+                margin-bottom: 10px;
+            }
+            .class-container {
+                gap: 10px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                max-width: 100%;
+                padding: 5px;
+            }
+            .class-card {
+                width: 180px;
+                min-width: 180px;
+                padding: 10px;
+                border-radius: 10px;
+            }
+            .class-card:hover {
+                transform: none;
+            }
+            .class-icon {
+                font-size: 32px;
+                margin-bottom: 5px;
+            }
+            .class-name {
+                font-size: 16px;
+                margin-bottom: 3px;
+            }
+            .class-type {
+                font-size: 10px;
+                margin-bottom: 8px;
+            }
+            .class-stats {
+                font-size: 10px;
+                padding: 6px;
+                margin-bottom: 8px;
+            }
+            .class-stats div {
+                margin: 2px 0;
+            }
+            .stat-bar {
+                width: 50px;
+                height: 6px;
+            }
+            .class-skills {
+                font-size: 9px;
+            }
+            .class-skills .skill-title {
+                margin-bottom: 3px;
+            }
+            .class-skills div {
+                margin: 1px 0;
+                padding-left: 5px;
+            }
+            /* 게임 UI 최적화 */
+            #ui {
+                font-size: 10px;
+                padding: 5px;
+            }
+            #villageHP {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+            #villageHPBar {
+                width: 120px;
+                height: 8px;
+            }
+            #buffIndicator {
+                font-size: 10px;
+                top: 100px;
+            }
+            #bossHP {
+                font-size: 11px;
+                bottom: 50px;
+            }
+            #bossHPBar {
+                width: 200px;
+                height: 10px;
+            }
+            /* 모바일 컨트롤 최적화 */
+            #mobileControls {
+                height: 160px;
+            }
+            #joystickArea {
+                left: 15px;
+                bottom: 10px;
+                width: 120px;
+                height: 120px;
+            }
+            #joystickBase {
+                width: 100px;
+                height: 100px;
+            }
+            #joystickThumb {
+                width: 40px;
+                height: 40px;
+                left: 40px;
+                top: 40px;
+            }
+            #mobileButtons {
+                right: 15px;
+                bottom: 10px;
+                gap: 8px;
+            }
+            #mobileSkills {
+                gap: 6px;
+            }
+            .mobile-btn {
+                width: 48px;
+                height: 48px;
+            }
+            .mobile-btn.attack-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+            .mobile-skill {
+                width: 42px;
+                height: 42px;
+            }
+            .mobile-skill .skill-icon {
+                font-size: 16px;
+            }
+            .mobile-skill .skill-key {
+                font-size: 8px;
+            }
+            /* 상점 최적화 */
+            #shop {
+                padding: 15px;
+                min-width: 280px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            #shop h2 {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+            #shop button {
+                padding: 8px 12px;
+                margin: 5px 0;
+                font-size: 11px;
+            }
+            /* 게임오버 최적화 */
+            #gameOver {
+                padding: 20px;
+            }
+            #gameOver h2 {
+                font-size: 20px;
+            }
+            #gameOver p {
+                font-size: 12px;
+                margin: 5px 0;
+            }
+            #gameOver button {
+                padding: 8px 20px;
+                font-size: 14px;
+            }
+        }
+
         @media (max-width: 600px) {
             .class-container {
                 flex-direction: column;

@@ -466,11 +466,31 @@
         .mobile-skill {
             width: 50px;
             height: 50px;
+            font-size: 20px;
+            flex-direction: column;
+            line-height: 1;
+        }
+        .mobile-skill .skill-key {
+            font-size: 10px;
+            opacity: 0.7;
+        }
+        .mobile-skill .skill-icon {
             font-size: 18px;
         }
         .mobile-skill.cooldown {
-            opacity: 0.4;
+            opacity: 0.5;
             background: rgba(30, 30, 50, 0.8);
+        }
+        .mobile-skill.cooldown .skill-icon {
+            display: none;
+        }
+        .mobile-skill .cooldown-text {
+            display: none;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .mobile-skill.cooldown .cooldown-text {
+            display: block;
         }
 
         /* 모바일 반응형 */
@@ -502,53 +522,145 @@
             }
         }
 
+        /* 세로모드 최적화 */
+        @media (max-width: 1024px) and (pointer: coarse) and (orientation: portrait) {
+            #gameContainer {
+                flex-direction: column;
+            }
+            canvas {
+                width: 100vw !important;
+                height: auto !important;
+                max-height: 55vh;
+            }
+            #mobileControls {
+                position: fixed;
+                bottom: 0;
+                height: 45vh;
+                background: rgba(20, 20, 40, 0.95);
+                border-top: 2px solid #4a4a6a;
+            }
+            #joystickArea {
+                left: 30px;
+                bottom: 50px;
+            }
+            #mobileButtons {
+                right: 30px;
+                bottom: 50px;
+                gap: 15px;
+            }
+            #mobileSkills {
+                gap: 10px;
+            }
+            .mobile-btn {
+                width: 58px;
+                height: 58px;
+            }
+            .mobile-btn.attack-btn {
+                width: 75px;
+                height: 75px;
+                font-size: 30px;
+            }
+            .mobile-skill {
+                width: 52px;
+                height: 52px;
+            }
+            #ui {
+                font-size: 10px;
+                padding: 5px;
+                max-width: 120px;
+            }
+            #villageHP {
+                font-size: 11px;
+                padding: 4px 8px;
+            }
+            #villageHPBar {
+                width: 100px;
+                height: 8px;
+            }
+            #bossHP {
+                bottom: auto;
+                top: 80px;
+                font-size: 11px;
+            }
+            #bossHPBar {
+                width: 150px;
+                height: 10px;
+            }
+            #buffIndicator {
+                top: auto;
+                bottom: 46vh;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 11px;
+                text-align: center;
+                background: rgba(0,0,0,0.6);
+                padding: 3px 8px;
+                border-radius: 4px;
+            }
+        }
+
         @media (max-width: 600px) {
             .class-container {
                 flex-direction: column;
                 align-items: center;
+                gap: 10px;
+                max-height: 70vh;
+                overflow-y: auto;
             }
             .class-card {
                 width: 90%;
                 max-width: 280px;
+                padding: 12px;
+            }
+            .class-icon {
+                font-size: 40px;
+            }
+            .class-name {
+                font-size: 18px;
             }
             #classSelect h1 {
-                font-size: 28px;
+                font-size: 24px;
             }
-            #ui {
-                font-size: 11px;
-                padding: 6px;
-            }
-            #villageHP {
+            #classSelect .subtitle {
                 font-size: 12px;
-                padding: 5px 10px;
+                margin-bottom: 15px;
             }
-            #villageHPBar {
-                width: 120px;
-            }
-            .mobile-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
-            }
-            .mobile-btn.attack-btn {
-                width: 65px;
-                height: 65px;
-                font-size: 26px;
-            }
-            .mobile-skill {
-                width: 42px;
-                height: 42px;
-                font-size: 14px;
+        }
+
+        @media (max-width: 400px) {
+            #joystickArea {
+                left: 15px;
+                bottom: 30px;
             }
             #joystickBase {
-                width: 100px;
-                height: 100px;
+                width: 90px;
+                height: 90px;
             }
             #joystickThumb {
-                width: 40px;
-                height: 40px;
-                left: 40px;
-                top: 40px;
+                width: 36px;
+                height: 36px;
+                left: 37px;
+                top: 37px;
+            }
+            #mobileButtons {
+                right: 15px;
+                bottom: 30px;
+            }
+            .mobile-btn {
+                width: 48px;
+                height: 48px;
+            }
+            .mobile-btn.attack-btn {
+                width: 62px;
+                height: 62px;
+                font-size: 24px;
+            }
+            .mobile-skill {
+                width: 44px;
+                height: 44px;
+            }
+            .mobile-skill .skill-icon {
+                font-size: 16px;
             }
         }
     </style>
@@ -661,10 +773,26 @@
             </div>
             <div id="mobileButtons">
                 <div id="mobileSkills">
-                    <button class="mobile-btn mobile-skill" id="mobileQ">Q</button>
-                    <button class="mobile-btn mobile-skill" id="mobileW">W</button>
-                    <button class="mobile-btn mobile-skill" id="mobileE">E</button>
-                    <button class="mobile-btn mobile-skill" id="mobileR">R</button>
+                    <button class="mobile-btn mobile-skill" id="mobileQ">
+                        <span class="skill-key">Q</span>
+                        <span class="skill-icon">❓</span>
+                        <span class="cooldown-text"></span>
+                    </button>
+                    <button class="mobile-btn mobile-skill" id="mobileW">
+                        <span class="skill-key">W</span>
+                        <span class="skill-icon">❓</span>
+                        <span class="cooldown-text"></span>
+                    </button>
+                    <button class="mobile-btn mobile-skill" id="mobileE">
+                        <span class="skill-key">E</span>
+                        <span class="skill-icon">❓</span>
+                        <span class="cooldown-text"></span>
+                    </button>
+                    <button class="mobile-btn mobile-skill" id="mobileR">
+                        <span class="skill-key">R</span>
+                        <span class="skill-icon">❓</span>
+                        <span class="cooldown-text"></span>
+                    </button>
                 </div>
                 <button class="mobile-btn attack-btn" id="mobileAttack">⚔️</button>
             </div>
@@ -1047,6 +1175,12 @@
                 const elem = document.getElementById('skill' + key);
                 elem.querySelector('.skill-icon').textContent = data.skills[key].icon;
                 elem.querySelector('.skill-name').textContent = data.skills[key].name;
+
+                // 모바일 스킬 아이콘도 업데이트
+                const mobileBtn = document.getElementById('mobile' + key);
+                if (mobileBtn) {
+                    mobileBtn.querySelector('.skill-icon').textContent = data.skills[key].icon;
+                }
             }
         }
 
@@ -3235,12 +3369,13 @@
                 // 모바일 스킬 버튼 업데이트
                 const mobileBtn = document.getElementById('mobile' + key);
                 if (mobileBtn) {
+                    const cdText = mobileBtn.querySelector('.cooldown-text');
                     if (skill.cooldown > 0) {
                         mobileBtn.classList.add('cooldown');
-                        mobileBtn.textContent = Math.ceil(skill.cooldown / 60);
+                        if (cdText) cdText.textContent = Math.ceil(skill.cooldown / 60);
                     } else {
                         mobileBtn.classList.remove('cooldown');
-                        mobileBtn.textContent = key;
+                        if (cdText) cdText.textContent = '';
                     }
                 }
             });

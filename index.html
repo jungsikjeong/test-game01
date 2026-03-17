@@ -1,0 +1,3079 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마을 디펜스 - 로그라이크</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        #gameContainer {
+            position: relative;
+        }
+        canvas {
+            border: 3px solid #4a4a6a;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(100, 100, 200, 0.3);
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        #ui div {
+            margin: 4px 0;
+        }
+        #villageHP {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 16px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.6);
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        #villageHPBar {
+            width: 200px;
+            height: 12px;
+            background: #333;
+            border-radius: 6px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        #villageHPFill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a4, #6c6);
+            width: 100%;
+            transition: width 0.3s;
+        }
+        #bossHP {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: rgba(80,0,0,0.8);
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        #bossHPBar {
+            width: 300px;
+            height: 14px;
+            background: #333;
+            border-radius: 7px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        #bossHPFill {
+            height: 100%;
+            background: linear-gradient(90deg, #a00, #f44);
+            width: 100%;
+            transition: width 0.2s;
+        }
+        #shop {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 40, 0.95);
+            border: 2px solid #6a6a9a;
+            border-radius: 12px;
+            padding: 25px;
+            display: none;
+            color: white;
+            text-align: center;
+            min-width: 350px;
+        }
+        #shop h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        #shop button {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #4a4a8a, #3a3a6a);
+            border: 2px solid #6a6a9a;
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #shop button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #5a5a9a, #4a4a7a);
+            transform: scale(1.02);
+        }
+        #shop button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #shop .close-btn {
+            background: linear-gradient(135deg, #8a4a4a, #6a3a3a);
+            border-color: #9a6a6a;
+            margin-top: 15px;
+        }
+        #shop .repair-btn {
+            background: linear-gradient(135deg, #4a8a4a, #3a6a3a);
+            border-color: #6a9a6a;
+        }
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 40, 0.95);
+            border: 2px solid #9a4a4a;
+            border-radius: 12px;
+            padding: 30px;
+            display: none;
+            color: white;
+            text-align: center;
+        }
+        #gameOver h2 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+        }
+        #gameOver p {
+            margin: 10px 0;
+            color: #ccc;
+        }
+        #gameOver button {
+            padding: 12px 30px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #4a8a4a, #3a6a3a);
+            border: 2px solid #6a9a6a;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #888;
+            font-size: 12px;
+        }
+        /* 직업 선택 화면 */
+        #classSelect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 20, 0.98);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        #classSelect h1 {
+            color: #ffd700;
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        #classSelect .subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .class-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 900px;
+        }
+        .class-card {
+            width: 260px;
+            background: linear-gradient(180deg, #2a2a4a, #1a1a2a);
+            border: 3px solid #4a4a6a;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .class-card:hover {
+            transform: translateY(-10px);
+            border-color: #8a8aaa;
+            box-shadow: 0 10px 30px rgba(100, 100, 200, 0.4);
+        }
+        .class-card.warrior { border-color: #c66; }
+        .class-card.warrior:hover { border-color: #f88; box-shadow: 0 10px 30px rgba(255, 100, 100, 0.4); }
+        .class-card.mage { border-color: #66c; }
+        .class-card.mage:hover { border-color: #88f; box-shadow: 0 10px 30px rgba(100, 100, 255, 0.4); }
+        .class-card.archer { border-color: #6c6; }
+        .class-card.archer:hover { border-color: #8f8; box-shadow: 0 10px 30px rgba(100, 255, 100, 0.4); }
+        .class-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+        .class-name {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        .class-type {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+        .class-stats {
+            text-align: left;
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+        }
+        .class-stats div {
+            margin: 4px 0;
+        }
+        .class-skills {
+            text-align: left;
+            font-size: 11px;
+            color: #ccc;
+        }
+        .class-skills .skill-title {
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .class-skills div {
+            margin: 3px 0;
+            padding-left: 10px;
+        }
+        .stat-bar {
+            display: inline-block;
+            height: 8px;
+            background: #333;
+            width: 80px;
+            border-radius: 4px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .stat-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+        .stat-fill.hp { background: linear-gradient(90deg, #4a4, #6c6); }
+        .stat-fill.atk { background: linear-gradient(90deg, #c44, #f66); }
+        .stat-fill.spd { background: linear-gradient(90deg, #44c, #66f); }
+        #skillBar {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        .skill {
+            width: 60px;
+            height: 70px;
+            background: rgba(30, 30, 50, 0.9);
+            border: 2px solid #555;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .skill.ready {
+            border-color: #88f;
+            box-shadow: 0 0 10px rgba(100, 100, 255, 0.5);
+        }
+        .skill.active {
+            border-color: #ff0;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+            transform: scale(1.1);
+        }
+        .skill.cooldown {
+            border-color: #444;
+            opacity: 0.7;
+        }
+        .skill-key {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 10px;
+            color: #aaa;
+            font-weight: bold;
+        }
+        .skill-icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+        .skill-name {
+            font-size: 9px;
+            color: #ccc;
+        }
+        .skill-cooldown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 5px #000;
+            display: none;
+        }
+        .skill.cooldown .skill-cooldown {
+            display: block;
+        }
+        .skill.cooldown .skill-icon {
+            opacity: 0.3;
+        }
+        #buffIndicator {
+            position: absolute;
+            top: 120px;
+            left: 10px;
+            color: #ffd700;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        .wave-announce {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: #fff;
+            text-shadow: 0 0 20px #f00, 0 0 40px #f00;
+            animation: pulse 0.5s ease-in-out;
+            pointer-events: none;
+        }
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="game" width="1000" height="700"></canvas>
+
+        <!-- 직업 선택 화면 -->
+        <div id="classSelect">
+            <h1>마을 디펜스</h1>
+            <div class="subtitle">직업을 선택하세요</div>
+            <div class="class-container">
+                <div class="class-card warrior" onclick="selectClass('warrior')">
+                    <div class="class-icon">⚔️</div>
+                    <div class="class-name">전사</div>
+                    <div class="class-type">근접 딜러 / 탱커</div>
+                    <div class="class-stats">
+                        <div>체력 <span class="stat-bar"><span class="stat-fill hp" style="width:90%"></span></span></div>
+                        <div>공격력 <span class="stat-bar"><span class="stat-fill atk" style="width:70%"></span></span></div>
+                        <div>속도 <span class="stat-bar"><span class="stat-fill spd" style="width:50%"></span></span></div>
+                    </div>
+                    <div class="class-skills">
+                        <div class="skill-title">스킬</div>
+                        <div>Q: 돌진 - 전방 돌격</div>
+                        <div>W: 함성 - 적 기절 + 버프</div>
+                        <div>E: 회전베기 - 주변 피해</div>
+                        <div>R: 대지분쇄 - 광역 궁극기</div>
+                    </div>
+                </div>
+
+                <div class="class-card mage" onclick="selectClass('mage')">
+                    <div class="class-icon">🔮</div>
+                    <div class="class-name">마법사</div>
+                    <div class="class-type">원거리 딜러</div>
+                    <div class="class-stats">
+                        <div>체력 <span class="stat-bar"><span class="stat-fill hp" style="width:40%"></span></span></div>
+                        <div>공격력 <span class="stat-bar"><span class="stat-fill atk" style="width:95%"></span></span></div>
+                        <div>속도 <span class="stat-bar"><span class="stat-fill spd" style="width:60%"></span></span></div>
+                    </div>
+                    <div class="class-skills">
+                        <div class="skill-title">스킬</div>
+                        <div>Q: 파이어볼 - 폭발 마법</div>
+                        <div>W: 텔레포트 - 순간이동</div>
+                        <div>E: 블리자드 - 범위 슬로우</div>
+                        <div>R: 메테오 - 광역 궁극기</div>
+                    </div>
+                </div>
+
+                <div class="class-card archer" onclick="selectClass('archer')">
+                    <div class="class-icon">🏹</div>
+                    <div class="class-name">궁수</div>
+                    <div class="class-type">원거리 딜러 / 기동</div>
+                    <div class="class-stats">
+                        <div>체력 <span class="stat-bar"><span class="stat-fill hp" style="width:55%"></span></span></div>
+                        <div>공격력 <span class="stat-bar"><span class="stat-fill atk" style="width:75%"></span></span></div>
+                        <div>속도 <span class="stat-bar"><span class="stat-fill spd" style="width:90%"></span></span></div>
+                    </div>
+                    <div class="class-skills">
+                        <div class="skill-title">스킬</div>
+                        <div>Q: 관통화살 - 적 관통</div>
+                        <div>W: 구르기 - 회피 이동</div>
+                        <div>E: 다중사격 - 연속 화살</div>
+                        <div>R: 화살비 - 광역 궁극기</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="ui">
+            <div id="health">HP: 100/100</div>
+            <div id="attack">공격력: 25</div>
+            <div id="gold">골드: 0</div>
+            <div id="wave">웨이브: 1</div>
+            <div id="enemies">남은 적: 0</div>
+        </div>
+        <div id="buffIndicator"></div>
+        <div id="villageHP">
+            <div>마을 중심부</div>
+            <div id="villageHPBar"><div id="villageHPFill"></div></div>
+            <div id="villageHPText">10000 / 10000</div>
+        </div>
+        <div id="bossHP">
+            <div id="bossName">보스</div>
+            <div id="bossHPBar"><div id="bossHPFill"></div></div>
+        </div>
+        <div id="shop">
+            <h2>상점</h2>
+            <button id="buyAttack">공격력 업그레이드 (50G)</button>
+            <button id="buySpeed">이동속도 업그레이드 (40G)</button>
+            <button id="buyHealth">최대체력 업그레이드 (60G)</button>
+            <button id="buyRange">공격 범위 업그레이드 (80G)</button>
+            <button id="buyHeal">체력 회복 (30G)</button>
+            <button id="repairVillage" class="repair-btn">마을 수리 500HP (100G)</button>
+            <button class="close-btn" id="closeShop">다음 웨이브 시작 [Enter]</button>
+        </div>
+        <div id="gameOver">
+            <h2 id="gameOverTitle">게임 오버</h2>
+            <p id="gameOverReason"></p>
+            <p id="finalWave">도달 웨이브: 1</p>
+            <p id="finalKills">처치한 적: 0</p>
+            <button id="restart">다시 시작</button>
+        </div>
+        <div id="instructions">방향키: 이동 | Space: 공격 | QWER: 스킬 | M: 음악</div>
+        <button id="bgmToggle" style="position:absolute;top:10px;right:10px;padding:8px 12px;background:#4a4a8a;border:2px solid #6a6a9a;border-radius:6px;color:white;cursor:pointer;font-size:12px;">🎵 BGM ON</button>
+        <div id="skillBar">
+            <div class="skill" id="skillQ">
+                <div class="skill-key">Q</div>
+                <div class="skill-icon">⚔️</div>
+                <div class="skill-name">돌진</div>
+                <div class="skill-cooldown"></div>
+            </div>
+            <div class="skill" id="skillW">
+                <div class="skill-key">W</div>
+                <div class="skill-icon">🛡️</div>
+                <div class="skill-name">함성</div>
+                <div class="skill-cooldown"></div>
+            </div>
+            <div class="skill" id="skillE">
+                <div class="skill-key">E</div>
+                <div class="skill-icon">🌀</div>
+                <div class="skill-name">회전베기</div>
+                <div class="skill-cooldown"></div>
+            </div>
+            <div class="skill" id="skillR">
+                <div class="skill-key">R</div>
+                <div class="skill-icon">💥</div>
+                <div class="skill-name">대지분쇄</div>
+                <div class="skill-cooldown"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // 오디오 컨텍스트 (효과음용)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        // 배경음악 시스템
+        let bgmPlaying = false;
+        let bgmInterval = null;
+        let bgmGain = null;
+
+        // 음계 정의
+        const notes = {
+            C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23,
+            G4: 392.00, A4: 440.00, B4: 493.88, C5: 523.25,
+            D5: 587.33, E5: 659.25, G3: 196.00, A3: 220.00
+        };
+
+        // 멜로디 패턴 (영웅적인 느낌)
+        const melodyPattern = [
+            { note: 'E4', dur: 0.2 }, { note: 'E4', dur: 0.2 }, { note: 'F4', dur: 0.2 }, { note: 'G4', dur: 0.4 },
+            { note: 'G4', dur: 0.2 }, { note: 'F4', dur: 0.2 }, { note: 'E4', dur: 0.2 }, { note: 'D4', dur: 0.4 },
+            { note: 'C4', dur: 0.2 }, { note: 'C4', dur: 0.2 }, { note: 'D4', dur: 0.2 }, { note: 'E4', dur: 0.4 },
+            { note: 'E4', dur: 0.3 }, { note: 'D4', dur: 0.1 }, { note: 'D4', dur: 0.4 }, { note: null, dur: 0.2 },
+            { note: 'E4', dur: 0.2 }, { note: 'E4', dur: 0.2 }, { note: 'F4', dur: 0.2 }, { note: 'G4', dur: 0.4 },
+            { note: 'G4', dur: 0.2 }, { note: 'F4', dur: 0.2 }, { note: 'E4', dur: 0.2 }, { note: 'D4', dur: 0.4 },
+            { note: 'C4', dur: 0.2 }, { note: 'C4', dur: 0.2 }, { note: 'D4', dur: 0.2 }, { note: 'E4', dur: 0.4 },
+            { note: 'D4', dur: 0.3 }, { note: 'C4', dur: 0.1 }, { note: 'C4', dur: 0.4 }, { note: null, dur: 0.2 }
+        ];
+
+        // 베이스 패턴
+        const bassPattern = [
+            { note: 'C4', dur: 0.4 }, { note: 'G3', dur: 0.4 }, { note: 'A3', dur: 0.4 }, { note: 'G3', dur: 0.4 },
+            { note: 'C4', dur: 0.4 }, { note: 'G3', dur: 0.4 }, { note: 'A3', dur: 0.4 }, { note: 'G3', dur: 0.4 }
+        ];
+
+        let melodyIndex = 0;
+        let bassIndex = 0;
+        let nextMelodyTime = 0;
+        let nextBassTime = 0;
+
+        function playBGMNote(freq, duration, type = 'square', volume = 0.1) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration * 0.9);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function updateBGM() {
+            if (!bgmPlaying) return;
+
+            const currentTime = audioCtx.currentTime;
+
+            // 멜로디 재생
+            if (currentTime >= nextMelodyTime) {
+                const note = currentMelodyPattern[melodyIndex];
+                if (note.note) {
+                    playBGMNote(notes[note.note], note.dur * 0.9, 'square', 0.08);
+                }
+                nextMelodyTime = currentTime + note.dur;
+                melodyIndex = (melodyIndex + 1) % currentMelodyPattern.length;
+            }
+
+            // 베이스 재생
+            if (currentTime >= nextBassTime) {
+                const note = bassPattern[bassIndex];
+                if (note.note) {
+                    playBGMNote(notes[note.note] / 2, note.dur * 0.8, 'triangle', 0.12);
+                }
+                nextBassTime = currentTime + note.dur;
+                bassIndex = (bassIndex + 1) % bassPattern.length;
+            }
+        }
+
+        function startBGM() {
+            if (bgmPlaying || !bgmEnabled) return;
+
+            // 오디오 컨텍스트 재개 (브라우저 정책)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            bgmPlaying = true;
+            melodyIndex = 0;
+            bassIndex = 0;
+            nextMelodyTime = audioCtx.currentTime;
+            nextBassTime = audioCtx.currentTime;
+
+            bgmInterval = setInterval(updateBGM, 50);
+        }
+
+        function stopBGM() {
+            bgmPlaying = false;
+            if (bgmInterval) {
+                clearInterval(bgmInterval);
+                bgmInterval = null;
+            }
+        }
+
+        // 보스전 음악 패턴
+        const bossMelodyPattern = [
+            { note: 'E4', dur: 0.15 }, { note: 'E4', dur: 0.15 }, { note: 'E4', dur: 0.15 }, { note: 'C4', dur: 0.15 },
+            { note: 'E4', dur: 0.15 }, { note: 'G4', dur: 0.3 }, { note: 'G3', dur: 0.3 }, { note: null, dur: 0.15 },
+            { note: 'C4', dur: 0.2 }, { note: null, dur: 0.1 }, { note: 'G3', dur: 0.2 }, { note: null, dur: 0.1 },
+            { note: 'E4', dur: 0.15 }, { note: null, dur: 0.15 }, { note: 'A4', dur: 0.2 }, { note: 'B4', dur: 0.2 },
+            { note: 'A4', dur: 0.2 }, { note: 'G4', dur: 0.3 }, { note: 'E4', dur: 0.2 }, { note: 'G4', dur: 0.2 },
+            { note: 'A4', dur: 0.3 }, { note: 'F4', dur: 0.2 }, { note: 'G4', dur: 0.2 }, { note: null, dur: 0.1 },
+            { note: 'E4', dur: 0.2 }, { note: null, dur: 0.1 }, { note: 'C4', dur: 0.2 }, { note: 'D4', dur: 0.2 },
+            { note: 'B4', dur: 0.3 }, { note: null, dur: 0.3 }
+        ];
+
+        let currentMelodyPattern = melodyPattern;
+
+        function setBossBGM(isBoss) {
+            currentMelodyPattern = isBoss ? bossMelodyPattern : melodyPattern;
+            melodyIndex = 0;
+        }
+
+        // 효과음 함수들
+        function playSound(type) {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            switch(type) {
+                case 'slash': // 근접 공격
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+                case 'hit': // 적 타격
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.08);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.08);
+                    break;
+                case 'kill': // 적 처치
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                    break;
+                case 'hurt': // 플레이어 피격
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+                case 'boss': // 보스 타격
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(100, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                    break;
+                case 'charge': // Q 스킬 - 돌진
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+                case 'warcry': // W 스킬 - 함성
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(250, audioCtx.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(300, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.4);
+                    break;
+                case 'whirlwind': // E 스킬 - 회전베기
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.4);
+                    break;
+                case 'ultimate': // R 스킬 - 궁극기
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(80, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.5);
+                    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.6);
+                    break;
+                case 'pickup': // 아이템 획득
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(523, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(659, audioCtx.currentTime + 0.05);
+                    oscillator.frequency.setValueAtTime(784, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+                case 'rare_pickup': // 희귀 아이템 획득
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    oscillator.frequency.setValueAtTime(554, audioCtx.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(659, audioCtx.currentTime + 0.2);
+                    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.5);
+                    break;
+            }
+        }
+
+        // 게임 상태
+        let gameState = 'classSelect'; // classSelect, playing, shop, gameover
+        let wave = 1;
+        let totalKills = 0;
+        let selectedClass = null;
+
+        // 직업 정의
+        const classData = {
+            warrior: {
+                name: '전사',
+                icon: '⚔️',
+                color: '#ff6666',
+                maxHealth: 120,
+                attack: 25,
+                speed: 4,
+                attackRange: 50,
+                attackSpeed: 20,
+                attackType: 'melee',
+                skills: {
+                    Q: { name: '돌진', maxCooldown: 300, icon: '💨' },
+                    W: { name: '전쟁의 함성', maxCooldown: 480, icon: '📢' },
+                    E: { name: '회전 베기', maxCooldown: 360, icon: '🌀' },
+                    R: { name: '대지 분쇄', maxCooldown: 1800, icon: '💥' }
+                }
+            },
+            mage: {
+                name: '마법사',
+                icon: '🔮',
+                color: '#6666ff',
+                maxHealth: 70,
+                attack: 35,
+                speed: 3.5,
+                attackRange: 250,
+                attackSpeed: 35,
+                attackType: 'ranged',
+                projectileColor: '#aa66ff',
+                skills: {
+                    Q: { name: '파이어볼', maxCooldown: 240, icon: '🔥' },
+                    W: { name: '텔레포트', maxCooldown: 360, icon: '✨' },
+                    E: { name: '블리자드', maxCooldown: 600, icon: '❄️' },
+                    R: { name: '메테오', maxCooldown: 1800, icon: '☄️' }
+                }
+            },
+            archer: {
+                name: '궁수',
+                icon: '🏹',
+                color: '#66ff66',
+                maxHealth: 85,
+                attack: 20,
+                speed: 5,
+                attackRange: 300,
+                attackSpeed: 15,
+                attackType: 'ranged',
+                projectileColor: '#88ff88',
+                skills: {
+                    Q: { name: '관통화살', maxCooldown: 180, icon: '➡️' },
+                    W: { name: '구르기', maxCooldown: 240, icon: '🔄' },
+                    E: { name: '다중사격', maxCooldown: 420, icon: '🎯' },
+                    R: { name: '화살비', maxCooldown: 1500, icon: '🌧️' }
+                }
+            }
+        };
+
+        // 직업 선택 함수
+        function selectClass(className) {
+            selectedClass = className;
+            const data = classData[className];
+
+            // 플레이어 스탯 설정
+            player.maxHealth = data.maxHealth;
+            player.health = data.maxHealth;
+            player.attack = data.attack;
+            player.speed = data.speed;
+            player.attackRange = data.attackRange;
+            player.attackSpeed = data.attackSpeed;
+            player.attackType = data.attackType;
+            player.className = className;
+            player.classData = data;
+
+            // 스킬 설정
+            for (let key in data.skills) {
+                player.skills[key].name = data.skills[key].name;
+                player.skills[key].maxCooldown = data.skills[key].maxCooldown;
+                player.skills[key].icon = data.skills[key].icon;
+            }
+
+            // 스킬 UI 업데이트
+            updateSkillIcons();
+
+            // 직업 선택 화면 숨기기
+            document.getElementById('classSelect').style.display = 'none';
+
+            // 게임 시작
+            gameState = 'playing';
+            startWave(1);
+        }
+
+        function updateSkillIcons() {
+            const data = classData[selectedClass];
+            for (let key in data.skills) {
+                const elem = document.getElementById('skill' + key);
+                elem.querySelector('.skill-icon').textContent = data.skills[key].icon;
+                elem.querySelector('.skill-name').textContent = data.skills[key].name;
+            }
+        }
+
+        // 마을 중심부
+        const village = {
+            x: centerX,
+            y: centerY,
+            radius: 60,
+            maxHealth: 10000,
+            health: 10000
+        };
+
+        // 마을 건물들
+        const buildings = [
+            { x: centerX - 100, y: centerY - 80, width: 50, height: 40, color: '#8B4513', name: '대장간' },
+            { x: centerX + 60, y: centerY - 90, width: 55, height: 45, color: '#654321', name: '상점' },
+            { x: centerX - 110, y: centerY + 50, width: 45, height: 50, color: '#5D4037', name: '주민집1' },
+            { x: centerX + 70, y: centerY + 60, width: 50, height: 45, color: '#6D4C41', name: '주민집2' },
+            { x: centerX - 30, y: centerY - 110, width: 60, height: 35, color: '#4E342E', name: '창고' },
+            { x: centerX + 10, y: centerY + 90, width: 45, height: 40, color: '#795548', name: '여관' },
+        ];
+
+        // NPC들
+        let npcs = [];
+        function initNPCs() {
+            npcs = [
+                { x: centerX - 60, y: centerY - 30, radius: 10, color: '#FFD700', name: '상인', homeX: centerX - 60, homeY: centerY - 30 },
+                { x: centerX + 40, y: centerY + 20, radius: 10, color: '#87CEEB', name: '대장장이', homeX: centerX + 40, homeY: centerY + 20 },
+                { x: centerX, y: centerY + 40, radius: 10, color: '#98FB98', name: '촌장', homeX: centerX, homeY: centerY + 40 },
+                { x: centerX + 80, y: centerY - 30, radius: 10, color: '#DDA0DD', name: '마법사', homeX: centerX + 80, homeY: centerY - 30 },
+                { x: centerX - 80, y: centerY + 30, radius: 10, color: '#F0E68C', name: '농부', homeX: centerX - 80, homeY: centerY + 30 },
+            ];
+        }
+
+        // 플레이어
+        const player = {
+            x: centerX,
+            y: centerY + 150,
+            radius: 18,
+            speed: 4,
+            maxHealth: 100,
+            health: 100,
+            attack: 25,
+            attackRange: 50,
+            attackCooldown: 0,
+            attackSpeed: 20,
+            gold: 0,
+            direction: { x: 0, y: -1 },
+            attackCost: 50,
+            speedCost: 40,
+            healthCost: 60,
+            rangeCost: 80,
+            healCost: 30,
+            isAttacking: false,
+            attackFrame: 0,
+            attackType: 'melee', // melee 또는 ranged
+            className: null,
+            classData: null,
+            // 스킬 시스템
+            skills: {
+                Q: { name: '스킬Q', cooldown: 0, maxCooldown: 300, active: false, duration: 0, icon: '❓' },
+                W: { name: '스킬W', cooldown: 0, maxCooldown: 480, active: false, duration: 0, icon: '❓' },
+                E: { name: '스킬E', cooldown: 0, maxCooldown: 360, active: false, duration: 0, icon: '❓' },
+                R: { name: '스킬R', cooldown: 0, maxCooldown: 1800, active: false, duration: 0, icon: '❓' }
+            },
+            // 버프
+            buffs: {
+                attackBoost: 0,
+                speedBoost: 0,
+                charging: false,
+                chargeSpeed: 0,
+                chargeDir: { x: 0, y: 0 },
+                invincible: 0,
+                shield: 0,
+                shieldHP: 0,
+                multiShot: 0,     // 궁수 다중사격
+                blizzard: 0       // 마법사 블리자드
+            }
+        };
+
+        // 투사체 (원거리 공격용)
+        let projectiles = [];
+
+        // 입력 상태
+        const keys = {};
+
+        // 게임 오브젝트
+        let slashEffects = [];
+        let skillEffects = [];
+        let enemies = [];
+        let particles = [];
+        let damageTexts = [];
+        let items = []; // 드랍 아이템
+        let boss = null;
+
+        // 아이템 정의
+        const itemTypes = {
+            health: { name: '체력 포션', icon: '❤️', color: '#ff6b6b', dropRate: 0.15 },
+            gold: { name: '골드 주머니', icon: '💰', color: '#ffd700', dropRate: 0.25 },
+            attackBoost: { name: '분노의 물약', icon: '⚔️', color: '#ff4500', dropRate: 0.08 },
+            speedBoost: { name: '신속의 물약', icon: '💨', color: '#00bfff', dropRate: 0.08 },
+            cooldownReset: { name: '시간의 모래', icon: '⏳', color: '#9400d3', dropRate: 0.03 },
+            shield: { name: '보호막', icon: '🛡️', color: '#4169e1', dropRate: 0.05 }
+        };
+
+        // 웨이브 설정
+        let enemiesRemaining = 0;
+        let spawnTimer = 0;
+        let enemiesToSpawn = 0;
+
+        // BGM 토글
+        let bgmEnabled = true;
+
+        function toggleBGM() {
+            bgmEnabled = !bgmEnabled;
+            const btn = document.getElementById('bgmToggle');
+            if (bgmEnabled) {
+                btn.textContent = '🎵 BGM ON';
+                btn.style.background = '#4a4a8a';
+                if (gameState === 'playing') startBGM();
+            } else {
+                btn.textContent = '🔇 BGM OFF';
+                btn.style.background = '#8a4a4a';
+                stopBGM();
+            }
+        }
+
+        document.getElementById('bgmToggle').addEventListener('click', toggleBGM);
+
+        // 이벤트 리스너
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+
+            if (e.code === 'Enter' && gameState === 'shop') {
+                e.preventDefault();
+                closeShop();
+            }
+
+            if (e.code === 'Space' && gameState === 'playing') {
+                e.preventDefault();
+                attack();
+            }
+
+            if (e.code === 'KeyM') {
+                toggleBGM();
+            }
+
+            // 스킬 키
+            if (gameState === 'playing') {
+                if (e.code === 'KeyQ') skillQ();
+                if (e.code === 'KeyW') { e.preventDefault(); skillW(); }
+                if (e.code === 'KeyE') skillE();
+                if (e.code === 'KeyR') skillR();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // 상점 버튼들
+        document.getElementById('buyAttack').addEventListener('click', () => {
+            if (player.gold >= player.attackCost) {
+                player.gold -= player.attackCost;
+                player.attack += 8;
+                player.attackCost = Math.floor(player.attackCost * 1.5);
+                updateShopButtons();
+                updateUI();
+            }
+        });
+
+        document.getElementById('buySpeed').addEventListener('click', () => {
+            if (player.gold >= player.speedCost) {
+                player.gold -= player.speedCost;
+                player.speed += 0.5;
+                player.speedCost = Math.floor(player.speedCost * 1.4);
+                updateShopButtons();
+                updateUI();
+            }
+        });
+
+        document.getElementById('buyHealth').addEventListener('click', () => {
+            if (player.gold >= player.healthCost) {
+                player.gold -= player.healthCost;
+                player.maxHealth += 25;
+                player.health += 25;
+                player.healthCost = Math.floor(player.healthCost * 1.5);
+                updateShopButtons();
+                updateUI();
+            }
+        });
+
+        document.getElementById('buyRange').addEventListener('click', () => {
+            if (player.gold >= player.rangeCost) {
+                player.gold -= player.rangeCost;
+                player.attackRange += 15;
+                player.rangeCost = Math.floor(player.rangeCost * 1.5);
+                updateShopButtons();
+                updateUI();
+            }
+        });
+
+        document.getElementById('buyHeal').addEventListener('click', () => {
+            if (player.gold >= player.healCost && player.health < player.maxHealth) {
+                player.gold -= player.healCost;
+                player.health = Math.min(player.maxHealth, player.health + 40);
+                updateShopButtons();
+                updateUI();
+            }
+        });
+
+        document.getElementById('repairVillage').addEventListener('click', () => {
+            if (player.gold >= 100 && village.health < village.maxHealth) {
+                player.gold -= 100;
+                village.health = Math.min(village.maxHealth, village.health + 500);
+                updateShopButtons();
+                updateUI();
+                updateVillageHP();
+            }
+        });
+
+        document.getElementById('closeShop').addEventListener('click', closeShop);
+        document.getElementById('restart').addEventListener('click', restartGame);
+
+        function updateShopButtons() {
+            document.getElementById('buyAttack').textContent = `공격력 +8 (${player.attackCost}G) [현재: ${player.attack}]`;
+            document.getElementById('buySpeed').textContent = `이동속도 +0.5 (${player.speedCost}G) [현재: ${player.speed.toFixed(1)}]`;
+            document.getElementById('buyHealth').textContent = `최대체력 +25 (${player.healthCost}G) [현재: ${player.maxHealth}]`;
+            document.getElementById('buyRange').textContent = `공격 범위 +15 (${player.rangeCost}G) [현재: ${player.attackRange}]`;
+            document.getElementById('buyHeal').textContent = `체력 회복 40HP (${player.healCost}G)`;
+            document.getElementById('repairVillage').textContent = `마을 수리 500HP (100G) [현재: ${Math.floor(village.health)}]`;
+
+            document.getElementById('buyAttack').disabled = player.gold < player.attackCost;
+            document.getElementById('buySpeed').disabled = player.gold < player.speedCost;
+            document.getElementById('buyHealth').disabled = player.gold < player.healthCost;
+            document.getElementById('buyRange').disabled = player.gold < player.rangeCost;
+            document.getElementById('buyHeal').disabled = player.gold < player.healCost || player.health >= player.maxHealth;
+            document.getElementById('repairVillage').disabled = player.gold < 100 || village.health >= village.maxHealth;
+        }
+
+        function openShop() {
+            gameState = 'shop';
+            stopBGM();
+            updateShopButtons();
+            document.getElementById('shop').style.display = 'block';
+        }
+
+        function closeShop() {
+            gameState = 'playing';
+            document.getElementById('shop').style.display = 'none';
+            startWave(wave);
+        }
+
+        function showWaveAnnouncement(text) {
+            const elem = document.createElement('div');
+            elem.className = 'wave-announce';
+            elem.textContent = text;
+            document.getElementById('gameContainer').appendChild(elem);
+            setTimeout(() => elem.remove(), 2000);
+        }
+
+        function startWave(waveNum) {
+            wave = waveNum;
+            const isBossWave = wave % 5 === 0;
+
+            if (isBossWave) {
+                showWaveAnnouncement(`웨이브 ${wave} - 보스 출현!`);
+                enemiesToSpawn = 2 + Math.floor(wave / 2);
+                setBossBGM(true);
+            } else {
+                showWaveAnnouncement(`웨이브 ${wave}`);
+                enemiesToSpawn = 5 + wave * 3;
+                setBossBGM(false);
+            }
+
+            enemiesRemaining = enemiesToSpawn + (isBossWave ? 1 : 0);
+            spawnTimer = 0;
+
+            if (isBossWave) {
+                spawnBoss();
+            }
+
+            startBGM();
+            updateUI();
+        }
+
+        function spawnBoss() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            switch(side) {
+                case 0: x = -50; y = centerY; break;
+                case 1: x = canvas.width + 50; y = centerY; break;
+                case 2: x = centerX; y = -50; break;
+                case 3: x = centerX; y = canvas.height + 50; break;
+            }
+
+            const bossTypes = [
+                { name: '오크 대장', color1: '#228B22', color2: '#006400' },
+                { name: '골렘', color1: '#808080', color2: '#505050' },
+                { name: '드래곤', color1: '#FF4500', color2: '#8B0000' },
+                { name: '리치', color1: '#9400D3', color2: '#4B0082' },
+                { name: '데몬 로드', color1: '#DC143C', color2: '#8B0000' }
+            ];
+            const bossType = bossTypes[Math.floor(wave / 5 - 1) % bossTypes.length];
+
+            boss = {
+                x, y,
+                radius: 50,
+                speed: 0.6 + wave * 0.01, // 보스 속도 느리게
+                maxHealth: 500 + wave * 150,
+                health: 500 + wave * 150,
+                damage: 20 + wave * 5,
+                attackCooldown: 0,
+                name: bossType.name,
+                color1: bossType.color1,
+                color2: bossType.color2,
+                gold: 100 + wave * 20
+            };
+
+            document.getElementById('bossHP').style.display = 'block';
+            document.getElementById('bossName').textContent = boss.name;
+            updateBossHP();
+        }
+
+        function spawnEnemy() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            const offset = Math.random() * 200 - 100;
+
+            switch(side) {
+                case 0: x = -30; y = centerY + offset; break;
+                case 1: x = canvas.width + 30; y = centerY + offset; break;
+                case 2: x = centerX + offset; y = -30; break;
+                case 3: x = centerX + offset; y = canvas.height + 30; break;
+            }
+
+            const baseHealth = 40 + wave * 12;
+            const baseDamage = 10 + wave * 2;
+            const isElite = Math.random() < 0.15 && wave > 2;
+
+            enemies.push({
+                x, y,
+                radius: isElite ? 24 : 16,
+                speed: isElite ? 0.6 : 0.8 + wave * 0.03, // 몬스터 속도 대폭 감소
+                maxHealth: isElite ? baseHealth * 2.5 : baseHealth,
+                health: isElite ? baseHealth * 2.5 : baseHealth,
+                damage: isElite ? baseDamage * 2 : baseDamage,
+                attackCooldown: 0,
+                type: isElite ? 'elite' : 'normal',
+                gold: isElite ? 12 + wave * 2 : 4 + wave
+            });
+        }
+
+        // 기본 공격 (직업에 따라 분기)
+        function attack() {
+            if (player.attackCooldown > 0) return;
+            if (player.direction.x === 0 && player.direction.y === 0) return;
+
+            if (player.attackType === 'melee') {
+                meleeAttack();
+            } else {
+                rangedAttack();
+            }
+        }
+
+        // 원거리 공격
+        function rangedAttack() {
+            player.attackCooldown = player.attackSpeed;
+
+            playSound('slash');
+
+            const angle = Math.atan2(player.direction.y, player.direction.x);
+            const effectiveAttack = getEffectiveAttack();
+            const color = player.classData ? player.classData.projectileColor : '#ffff00';
+
+            // 다중사격 버프 체크
+            const shotCount = player.buffs.multiShot > 0 ? 3 : 1;
+            const spreadAngle = 0.2;
+
+            for (let i = 0; i < shotCount; i++) {
+                let shotAngle = angle;
+                if (shotCount > 1) {
+                    shotAngle = angle + (i - 1) * spreadAngle;
+                }
+
+                projectiles.push({
+                    x: player.x + Math.cos(shotAngle) * player.radius,
+                    y: player.y + Math.sin(shotAngle) * player.radius,
+                    vx: Math.cos(shotAngle) * 12,
+                    vy: Math.sin(shotAngle) * 12,
+                    radius: 6,
+                    damage: effectiveAttack,
+                    color: color,
+                    piercing: false
+                });
+            }
+
+            createParticles(
+                player.x + player.direction.x * player.radius,
+                player.y + player.direction.y * player.radius,
+                color, 3
+            );
+        }
+
+        // 근접 공격
+        function meleeAttack() {
+            if (player.attackCooldown > 0) return;
+            if (player.direction.x === 0 && player.direction.y === 0) return;
+
+            player.attackCooldown = player.attackSpeed;
+            player.isAttacking = true;
+            player.attackFrame = 10;
+
+            playSound('slash');
+
+            const angle = Math.atan2(player.direction.y, player.direction.x);
+            slashEffects.push({
+                x: player.x + player.direction.x * (player.radius + 10),
+                y: player.y + player.direction.y * (player.radius + 10),
+                angle: angle,
+                radius: player.attackRange,
+                life: 1,
+                damage: player.attack,
+                hit: false
+            });
+
+            const attackX = player.x + player.direction.x * (player.radius + player.attackRange / 2);
+            const attackY = player.y + player.direction.y * (player.radius + player.attackRange / 2);
+            const effectiveAttack = getEffectiveAttack();
+
+            // 보스 타격 체크
+            if (boss) {
+                const dist = Math.hypot(boss.x - attackX, boss.y - attackY);
+                if (dist < player.attackRange + boss.radius) {
+                    boss.health -= effectiveAttack;
+                    playSound('boss');
+                    createParticles(boss.x, boss.y, '#ffaa00', 8);
+                    createDamageText(boss.x, boss.y - boss.radius - 10, effectiveAttack, '#ffff00');
+
+                    if (boss.health <= 0) {
+                        player.gold += boss.gold;
+                        totalKills++;
+                        enemiesRemaining--;
+                        playSound('kill');
+                        createParticles(boss.x, boss.y, boss.color1, 30);
+                        dropItem(boss.x, boss.y, false, true); // 보스 드랍
+                        document.getElementById('bossHP').style.display = 'none';
+                        boss = null;
+                        updateUI();
+                        checkWaveClear();
+                    } else {
+                        updateBossHP();
+                    }
+                }
+            }
+
+            // 일반 적 타격 체크
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                const dist = Math.hypot(enemy.x - attackX, enemy.y - attackY);
+                if (dist < player.attackRange + enemy.radius) {
+                    enemy.health -= effectiveAttack;
+                    playSound('hit');
+                    createParticles(enemy.x, enemy.y, '#ffaa00', 5);
+                    createDamageText(enemy.x, enemy.y - 20, effectiveAttack, '#ffff00');
+
+                    if (enemy.health <= 0) {
+                        player.gold += enemy.gold;
+                        totalKills++;
+                        enemiesRemaining--;
+                        playSound('kill');
+                        createParticles(enemy.x, enemy.y, enemy.type === 'elite' ? '#ff00ff' : '#ff4444', 15);
+                        dropItem(enemy.x, enemy.y, enemy.type === 'elite');
+                        enemies.splice(i, 1);
+                        updateUI();
+                        checkWaveClear();
+                    }
+                }
+            }
+        }
+
+        // 스킬 실행 (직업에 따라 분기)
+        function skillQ() {
+            if (player.skills.Q.cooldown > 0) return;
+            if (!selectedClass) return;
+
+            switch(selectedClass) {
+                case 'warrior': warriorQ(); break;
+                case 'mage': mageQ(); break;
+                case 'archer': archerQ(); break;
+            }
+        }
+
+        function skillW() {
+            if (player.skills.W.cooldown > 0) return;
+            if (!selectedClass) return;
+
+            switch(selectedClass) {
+                case 'warrior': warriorW(); break;
+                case 'mage': mageW(); break;
+                case 'archer': archerW(); break;
+            }
+        }
+
+        function skillE() {
+            if (player.skills.E.cooldown > 0) return;
+            if (!selectedClass) return;
+
+            switch(selectedClass) {
+                case 'warrior': warriorE(); break;
+                case 'mage': mageE(); break;
+                case 'archer': archerE(); break;
+            }
+        }
+
+        function skillR() {
+            if (player.skills.R.cooldown > 0) return;
+            if (!selectedClass) return;
+
+            switch(selectedClass) {
+                case 'warrior': warriorR(); break;
+                case 'mage': mageR(); break;
+                case 'archer': archerR(); break;
+            }
+        }
+
+        // ========== 전사 스킬 ==========
+        function warriorQ() { // 돌진
+            if (player.direction.x === 0 && player.direction.y === 0) return;
+
+            player.skills.Q.cooldown = player.skills.Q.maxCooldown;
+            player.buffs.charging = true;
+            player.buffs.chargeSpeed = 15;
+            player.buffs.chargeDir = { ...player.direction };
+            player.buffs.invincible = 20;
+
+            playSound('charge');
+            skillEffects.push({ type: 'charge', x: player.x, y: player.y, life: 1 });
+        }
+
+        function warriorW() { // 전쟁의 함성
+            player.skills.W.cooldown = player.skills.W.maxCooldown;
+            player.buffs.attackBoost = 600;
+
+            playSound('warcry');
+
+            const stunRadius = 150;
+            enemies.forEach(enemy => {
+                const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+                if (dist < stunRadius) {
+                    enemy.stunned = 120;
+                    createParticles(enemy.x, enemy.y, '#ffff00', 5);
+                }
+            });
+
+            if (boss) {
+                const dist = Math.hypot(boss.x - player.x, boss.y - player.y);
+                if (dist < stunRadius) {
+                    boss.stunned = 60;
+                    createParticles(boss.x, boss.y, '#ffff00', 8);
+                }
+            }
+
+            skillEffects.push({ type: 'warcry', x: player.x, y: player.y, radius: 0, maxRadius: stunRadius, life: 1 });
+        }
+
+        function warriorE() { // 회전 베기
+            player.skills.E.cooldown = player.skills.E.maxCooldown;
+            player.skills.E.active = true;
+            player.skills.E.duration = 30;
+
+            playSound('whirlwind');
+            skillEffects.push({ type: 'whirlwind', x: player.x, y: player.y, angle: 0, radius: player.attackRange + 30, life: 1 });
+        }
+
+        function warriorR() { // 대지 분쇄
+            player.skills.R.cooldown = player.skills.R.maxCooldown;
+            playSound('ultimate');
+
+            const ultRadius = 200;
+            const ultDamage = getEffectiveAttack() * 5;
+
+            enemies.forEach(enemy => {
+                const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+                if (dist < ultRadius) {
+                    enemy.health -= ultDamage;
+                    enemy.stunned = 90;
+                    createDamageText(enemy.x, enemy.y - 20, ultDamage, '#ff00ff');
+                    createParticles(enemy.x, enemy.y, '#ff00ff', 10);
+                    if (enemy.health <= 0) {
+                        player.gold += enemy.gold;
+                        totalKills++;
+                        enemiesRemaining--;
+                        playSound('kill');
+                        dropItem(enemy.x, enemy.y, enemy.type === 'elite');
+                    }
+                }
+            });
+            enemies = enemies.filter(e => e.health > 0);
+
+            if (boss) {
+                const dist = Math.hypot(boss.x - player.x, boss.y - player.y);
+                if (dist < ultRadius) {
+                    boss.health -= ultDamage;
+                    boss.stunned = 60;
+                    createDamageText(boss.x, boss.y - boss.radius, ultDamage, '#ff00ff');
+                    if (boss.health <= 0) {
+                        player.gold += boss.gold;
+                        totalKills++;
+                        enemiesRemaining--;
+                        dropItem(boss.x, boss.y, false, true);
+                        document.getElementById('bossHP').style.display = 'none';
+                        boss = null;
+                    } else {
+                        updateBossHP();
+                    }
+                }
+            }
+
+            skillEffects.push({ type: 'ultimate', x: player.x, y: player.y, radius: 0, maxRadius: ultRadius, life: 1 });
+            shakeScreen();
+            updateUI();
+            checkWaveClear();
+        }
+
+        // ========== 마법사 스킬 ==========
+        function mageQ() { // 파이어볼
+            if (player.direction.x === 0 && player.direction.y === 0) return;
+
+            player.skills.Q.cooldown = player.skills.Q.maxCooldown;
+            playSound('charge');
+
+            const angle = Math.atan2(player.direction.y, player.direction.x);
+            projectiles.push({
+                x: player.x,
+                y: player.y,
+                vx: Math.cos(angle) * 8,
+                vy: Math.sin(angle) * 8,
+                radius: 20,
+                damage: getEffectiveAttack() * 3,
+                color: '#ff6600',
+                piercing: false,
+                explosive: true,
+                explosionRadius: 80
+            });
+
+            createParticles(player.x, player.y, '#ff6600', 8);
+        }
+
+        function mageW() { // 텔레포트
+            if (player.direction.x === 0 && player.direction.y === 0) return;
+
+            player.skills.W.cooldown = player.skills.W.maxCooldown;
+            playSound('warcry');
+
+            createParticles(player.x, player.y, '#aa66ff', 15);
+
+            player.x += player.direction.x * 150;
+            player.y += player.direction.y * 150;
+
+            // 경계 체크
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+
+            player.buffs.invincible = 30;
+            createParticles(player.x, player.y, '#aa66ff', 15);
+            skillEffects.push({ type: 'teleport', x: player.x, y: player.y, life: 1 });
+        }
+
+        function mageE() { // 블리자드
+            player.skills.E.cooldown = player.skills.E.maxCooldown;
+            player.buffs.blizzard = 180; // 3초
+            playSound('whirlwind');
+
+            skillEffects.push({ type: 'blizzard', x: player.x, y: player.y, radius: 150, life: 1 });
+        }
+
+        function mageR() { // 메테오
+            player.skills.R.cooldown = player.skills.R.maxCooldown;
+            playSound('ultimate');
+
+            // 여러 메테오 생성
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    if (gameState !== 'playing') return;
+                    const targetX = player.x + (Math.random() - 0.5) * 400;
+                    const targetY = player.y + (Math.random() - 0.5) * 400;
+
+                    skillEffects.push({
+                        type: 'meteor',
+                        x: targetX,
+                        y: targetY - 300,
+                        targetX: targetX,
+                        targetY: targetY,
+                        radius: 40,
+                        damage: getEffectiveAttack() * 4,
+                        life: 1
+                    });
+                }, i * 150);
+            }
+
+            shakeScreen();
+        }
+
+        // ========== 궁수 스킬 ==========
+        function archerQ() { // 관통 화살
+            if (player.direction.x === 0 && player.direction.y === 0) return;
+
+            player.skills.Q.cooldown = player.skills.Q.maxCooldown;
+            playSound('charge');
+
+            const angle = Math.atan2(player.direction.y, player.direction.x);
+            projectiles.push({
+                x: player.x,
+                y: player.y,
+                vx: Math.cos(angle) * 18,
+                vy: Math.sin(angle) * 18,
+                radius: 8,
+                damage: getEffectiveAttack() * 2.5,
+                color: '#88ff88',
+                piercing: true,
+                hitEnemies: []
+            });
+
+            createParticles(player.x, player.y, '#88ff88', 5);
+        }
+
+        function archerW() { // 구르기
+            if (player.direction.x === 0 && player.direction.y === 0) return;
+
+            player.skills.W.cooldown = player.skills.W.maxCooldown;
+            playSound('charge');
+
+            player.buffs.charging = true;
+            player.buffs.chargeSpeed = 20;
+            player.buffs.chargeDir = { ...player.direction };
+            player.buffs.invincible = 25;
+
+            skillEffects.push({ type: 'roll', x: player.x, y: player.y, life: 1 });
+        }
+
+        function archerE() { // 다중 사격
+            player.skills.E.cooldown = player.skills.E.maxCooldown;
+            player.buffs.multiShot = 300; // 5초간 3발씩
+            playSound('whirlwind');
+
+            createParticles(player.x, player.y, '#88ff88', 10);
+            skillEffects.push({ type: 'multishot', x: player.x, y: player.y, life: 1 });
+        }
+
+        function archerR() { // 화살비
+            player.skills.R.cooldown = player.skills.R.maxCooldown;
+            playSound('ultimate');
+
+            const centerX = player.x + player.direction.x * 200;
+            const centerY = player.y + player.direction.y * 200;
+
+            // 화살비 영역 생성
+            skillEffects.push({
+                type: 'arrowRain',
+                x: centerX,
+                y: centerY,
+                radius: 120,
+                duration: 120, // 2초
+                damage: getEffectiveAttack() * 0.5,
+                life: 1
+            });
+
+            shakeScreen();
+        }
+
+        // 화면 흔들림
+        function shakeScreen() {
+            canvas.style.transform = 'translate(5px, 5px)';
+            setTimeout(() => canvas.style.transform = 'translate(-5px, -5px)', 50);
+            setTimeout(() => canvas.style.transform = 'translate(3px, -3px)', 100);
+            setTimeout(() => canvas.style.transform = 'translate(-3px, 3px)', 150);
+            setTimeout(() => canvas.style.transform = '', 200);
+        }
+
+        // 아이템 드랍
+        function dropItem(x, y, isElite = false, isBoss = false) {
+            // 보스는 무조건 여러 개 드랍
+            if (isBoss) {
+                for (let i = 0; i < 5; i++) {
+                    const offsetX = (Math.random() - 0.5) * 80;
+                    const offsetY = (Math.random() - 0.5) * 80;
+                    createItem(x + offsetX, y + offsetY, true);
+                }
+                // 보스는 희귀 아이템 확정 드랍
+                createItem(x, y, true, 'cooldownReset');
+                return;
+            }
+
+            // 엘리트는 드랍률 증가
+            const dropMultiplier = isElite ? 2 : 1;
+
+            for (let type in itemTypes) {
+                if (Math.random() < itemTypes[type].dropRate * dropMultiplier) {
+                    createItem(x, y, isElite, type);
+                    break; // 한 번에 하나만 드랍
+                }
+            }
+        }
+
+        function createItem(x, y, isRare = false, forceType = null) {
+            let type;
+            if (forceType) {
+                type = forceType;
+            } else {
+                const types = Object.keys(itemTypes);
+                type = types[Math.floor(Math.random() * types.length)];
+            }
+
+            items.push({
+                x: x + (Math.random() - 0.5) * 30,
+                y: y + (Math.random() - 0.5) * 30,
+                type: type,
+                radius: isRare ? 18 : 14,
+                isRare: isRare,
+                lifetime: 600, // 10초 후 사라짐
+                bobOffset: Math.random() * Math.PI * 2
+            });
+        }
+
+        // 아이템 획득
+        function collectItem(item) {
+            const type = item.type;
+            let message = '';
+
+            switch(type) {
+                case 'health':
+                    const healAmount = 30;
+                    player.health = Math.min(player.maxHealth, player.health + healAmount);
+                    message = `+${healAmount} HP`;
+                    createParticles(player.x, player.y, '#ff6b6b', 10);
+                    break;
+
+                case 'gold':
+                    const goldAmount = 10 + wave * 2 + (item.isRare ? 20 : 0);
+                    player.gold += goldAmount;
+                    message = `+${goldAmount} 골드`;
+                    createParticles(player.x, player.y, '#ffd700', 10);
+                    break;
+
+                case 'attackBoost':
+                    player.buffs.attackBoost = Math.max(player.buffs.attackBoost, 480); // 8초
+                    message = '공격력 증가!';
+                    createParticles(player.x, player.y, '#ff4500', 10);
+                    break;
+
+                case 'speedBoost':
+                    player.buffs.speedBoost = 480; // 8초
+                    message = '이동속도 증가!';
+                    createParticles(player.x, player.y, '#00bfff', 10);
+                    break;
+
+                case 'cooldownReset':
+                    for (let key in player.skills) {
+                        player.skills[key].cooldown = 0;
+                    }
+                    message = '스킬 초기화!';
+                    createParticles(player.x, player.y, '#9400d3', 15);
+                    break;
+
+                case 'shield':
+                    player.buffs.shield = 300; // 5초 보호막
+                    player.buffs.shieldHP = 50;
+                    message = '보호막 획득!';
+                    createParticles(player.x, player.y, '#4169e1', 10);
+                    break;
+            }
+
+            // 획득 메시지
+            createDamageText(player.x, player.y - 40, message, itemTypes[type].color);
+
+            // 효과음
+            if (item.isRare || type === 'cooldownReset') {
+                playSound('rare_pickup');
+            } else {
+                playSound('pickup');
+            }
+
+            updateUI();
+        }
+
+        // 색상 밝기 조절
+        function shadeColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+            const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amt));
+            const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+
+        function createParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 4 + 1;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: Math.random() * 4 + 2,
+                    color,
+                    life: 1
+                });
+            }
+        }
+
+        function createDamageText(x, y, text, color = '#fff') {
+            damageTexts.push({
+                x: x + (Math.random() - 0.5) * 20,
+                y,
+                text: text.toString(),
+                life: 1,
+                color
+            });
+        }
+
+        function getDistanceToPlayer(entity) {
+            return Math.hypot(player.x - entity.x, player.y - entity.y);
+        }
+
+        function getDistanceToVillage(entity) {
+            return Math.hypot(village.x - entity.x, village.y - entity.y);
+        }
+
+        function updateEnemy(enemy) {
+            // 기절 상태 처리
+            if (enemy.stunned > 0) {
+                enemy.stunned--;
+                return;
+            }
+
+            // 슬로우 상태 처리
+            if (enemy.slowed > 0) {
+                enemy.slowed--;
+            }
+
+            const distToPlayer = getDistanceToPlayer(enemy);
+            const distToVillage = getDistanceToVillage(enemy);
+
+            let targetX, targetY;
+
+            if (distToPlayer < 300 && player.health > 0) {
+                targetX = player.x;
+                targetY = player.y;
+            } else {
+                targetX = village.x;
+                targetY = village.y;
+            }
+
+            const angle = Math.atan2(targetY - enemy.y, targetX - enemy.x);
+            const speedMult = enemy.slowed > 0 ? 0.4 : 1;
+            enemy.x += Math.cos(angle) * enemy.speed * speedMult;
+            enemy.y += Math.sin(angle) * enemy.speed * speedMult;
+
+            enemy.attackCooldown = Math.max(0, enemy.attackCooldown - 1);
+
+            // 플레이어 충돌
+            if (distToPlayer < player.radius + enemy.radius && enemy.attackCooldown <= 0) {
+                if (player.buffs.invincible <= 0) {
+                    let damage = enemy.damage;
+
+                    // 보호막이 있으면 먼저 흡수
+                    if (player.buffs.shield > 0 && player.buffs.shieldHP > 0) {
+                        if (player.buffs.shieldHP >= damage) {
+                            player.buffs.shieldHP -= damage;
+                            damage = 0;
+                            createDamageText(player.x, player.y - 30, '흡수!', '#4169e1');
+                        } else {
+                            damage -= player.buffs.shieldHP;
+                            player.buffs.shieldHP = 0;
+                            player.buffs.shield = 0;
+                            createDamageText(player.x, player.y - 30, '보호막 파괴!', '#4169e1');
+                        }
+                    }
+
+                    if (damage > 0) {
+                        player.health -= damage;
+                        playSound('hurt');
+                        createDamageText(player.x, player.y - 30, damage, '#ff5555');
+                        createParticles(player.x, player.y, '#ff0000', 5);
+
+                        if (player.health <= 0) {
+                            gameOver('플레이어가 쓰러졌습니다!');
+                        }
+                    }
+                    updateUI();
+                }
+                enemy.attackCooldown = 60;
+
+                const pushAngle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+                enemy.x += Math.cos(pushAngle) * 10;
+                enemy.y += Math.sin(pushAngle) * 10;
+            }
+
+            // 마을 충돌
+            if (distToVillage < village.radius + enemy.radius && enemy.attackCooldown <= 0) {
+                village.health -= enemy.damage;
+                enemy.attackCooldown = 60;
+                createDamageText(village.x, village.y - 50, enemy.damage, '#ffaa00');
+                createParticles(village.x + (Math.random() - 0.5) * 50, village.y + (Math.random() - 0.5) * 50, '#8B4513', 8);
+                updateVillageHP();
+
+                if (village.health <= 0) {
+                    gameOver('마을이 파괴되었습니다!');
+                }
+            }
+        }
+
+        function updateBoss() {
+            if (!boss) return;
+
+            // 기절 상태 처리
+            if (boss.stunned > 0) {
+                boss.stunned--;
+                return;
+            }
+
+            const distToPlayer = getDistanceToPlayer(boss);
+            const distToVillage = getDistanceToVillage(boss);
+
+            let targetX, targetY;
+
+            if (distToPlayer < 350 && player.health > 0) {
+                targetX = player.x;
+                targetY = player.y;
+            } else {
+                targetX = village.x;
+                targetY = village.y;
+            }
+
+            const angle = Math.atan2(targetY - boss.y, targetX - boss.x);
+            boss.x += Math.cos(angle) * boss.speed;
+            boss.y += Math.sin(angle) * boss.speed;
+
+            boss.attackCooldown = Math.max(0, boss.attackCooldown - 1);
+
+            // 플레이어 충돌
+            if (distToPlayer < player.radius + boss.radius && boss.attackCooldown <= 0) {
+                if (player.buffs.invincible <= 0) {
+                    player.health -= boss.damage;
+                    playSound('hurt');
+                    createDamageText(player.x, player.y - 30, boss.damage, '#ff0000');
+                    createParticles(player.x, player.y, '#ff0000', 10);
+
+                    if (player.health <= 0) {
+                        gameOver('플레이어가 쓰러졌습니다!');
+                    }
+                    updateUI();
+                }
+                boss.attackCooldown = 90;
+            }
+
+            // 마을 충돌
+            if (distToVillage < village.radius + boss.radius && boss.attackCooldown <= 0) {
+                village.health -= boss.damage * 2;
+                boss.attackCooldown = 90;
+                createDamageText(village.x, village.y - 50, boss.damage * 2, '#ff0000');
+                createParticles(village.x, village.y, '#8B4513', 15);
+                updateVillageHP();
+
+                if (village.health <= 0) {
+                    gameOver('마을이 파괴되었습니다!');
+                }
+            }
+
+            updateBossHP();
+        }
+
+        function update() {
+            if (gameState !== 'playing') return;
+
+            // 플레이어 이동 (방향키)
+            let dx = 0, dy = 0;
+            if (keys['ArrowUp']) dy -= 1;
+            if (keys['ArrowDown']) dy += 1;
+            if (keys['ArrowLeft']) dx -= 1;
+            if (keys['ArrowRight']) dx += 1;
+
+            if (dx !== 0 || dy !== 0) {
+                const len = Math.sqrt(dx*dx + dy*dy);
+                const normX = dx / len;
+                const normY = dy / len;
+
+                const currentSpeed = player.speed * (player.buffs.speedBoost > 0 ? 1.5 : 1);
+                player.x += normX * currentSpeed;
+                player.y += normY * currentSpeed;
+
+                player.direction.x = normX;
+                player.direction.y = normY;
+            }
+
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+
+            // 공격 쿨다운
+            player.attackCooldown = Math.max(0, player.attackCooldown - 1);
+            if (player.attackFrame > 0) player.attackFrame--;
+            if (player.attackFrame === 0) player.isAttacking = false;
+
+            // 스킬 쿨다운
+            for (let key in player.skills) {
+                if (player.skills[key].cooldown > 0) {
+                    player.skills[key].cooldown--;
+                }
+                if (player.skills[key].duration > 0) {
+                    player.skills[key].duration--;
+                    if (player.skills[key].duration === 0) {
+                        player.skills[key].active = false;
+                    }
+                }
+            }
+
+            // 버프 처리
+            if (player.buffs.attackBoost > 0) {
+                player.buffs.attackBoost--;
+            }
+            if (player.buffs.speedBoost > 0) {
+                player.buffs.speedBoost--;
+            }
+            if (player.buffs.invincible > 0) {
+                player.buffs.invincible--;
+            }
+            if (player.buffs.shield > 0) {
+                player.buffs.shield--;
+                if (player.buffs.shield <= 0) {
+                    player.buffs.shieldHP = 0;
+                }
+            }
+            if (player.buffs.multiShot > 0) {
+                player.buffs.multiShot--;
+            }
+            if (player.buffs.blizzard > 0) {
+                player.buffs.blizzard--;
+                // 블리자드 범위 내 적 슬로우 + 피해
+                const blizzardRadius = 150;
+                enemies.forEach(enemy => {
+                    const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+                    if (dist < blizzardRadius) {
+                        enemy.slowed = 30;
+                        if (player.buffs.blizzard % 20 === 0) {
+                            const dmg = Math.floor(getEffectiveAttack() * 0.3);
+                            enemy.health -= dmg;
+                            createDamageText(enemy.x, enemy.y - 20, dmg, '#88ccff');
+                            if (enemy.health <= 0) {
+                                player.gold += enemy.gold;
+                                totalKills++;
+                                enemiesRemaining--;
+                                dropItem(enemy.x, enemy.y, enemy.type === 'elite');
+                            }
+                        }
+                    }
+                });
+                enemies = enemies.filter(e => e.health > 0);
+            }
+
+            // 돌진 처리
+            if (player.buffs.charging) {
+                player.x += player.buffs.chargeDir.x * player.buffs.chargeSpeed;
+                player.y += player.buffs.chargeDir.y * player.buffs.chargeSpeed;
+                player.buffs.chargeSpeed -= 0.5;
+
+                // 돌진 중 적에게 피해
+                const chargeDamage = getEffectiveAttack() * 2;
+                enemies.forEach(enemy => {
+                    const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+                    if (dist < player.radius + enemy.radius + 10) {
+                        enemy.health -= chargeDamage;
+                        createDamageText(enemy.x, enemy.y - 20, chargeDamage, '#00ffff');
+                        createParticles(enemy.x, enemy.y, '#00ffff', 5);
+                        // 적 밀어내기
+                        const pushAngle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+                        enemy.x += Math.cos(pushAngle) * 30;
+                        enemy.y += Math.sin(pushAngle) * 30;
+
+                        if (enemy.health <= 0) {
+                            player.gold += enemy.gold;
+                            totalKills++;
+                            enemiesRemaining--;
+                            playSound('kill');
+                            dropItem(enemy.x, enemy.y, enemy.type === 'elite');
+                        }
+                    }
+                });
+                enemies = enemies.filter(e => e.health > 0);
+
+                if (boss) {
+                    const dist = Math.hypot(boss.x - player.x, boss.y - player.y);
+                    if (dist < player.radius + boss.radius + 10) {
+                        boss.health -= chargeDamage;
+                        createDamageText(boss.x, boss.y - boss.radius, chargeDamage, '#00ffff');
+                        createParticles(boss.x, boss.y, '#00ffff', 8);
+                        if (boss.health <= 0) {
+                            player.gold += boss.gold;
+                            totalKills++;
+                            enemiesRemaining--;
+                            playSound('kill');
+                            createParticles(boss.x, boss.y, boss.color1, 30);
+                            dropItem(boss.x, boss.y, false, true);
+                            document.getElementById('bossHP').style.display = 'none';
+                            boss = null;
+                        } else {
+                            updateBossHP();
+                        }
+                    }
+                }
+
+                if (player.buffs.chargeSpeed <= 0) {
+                    player.buffs.charging = false;
+                }
+
+                updateUI();
+                checkWaveClear();
+            }
+
+            // E 스킬 - 회전베기 지속 효과
+            if (player.skills.E.active) {
+                const whirlDamage = Math.floor(getEffectiveAttack() * 0.5);
+                const whirlRange = player.attackRange + 30;
+
+                enemies.forEach(enemy => {
+                    const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+                    if (dist < whirlRange) {
+                        enemy.health -= whirlDamage;
+                        if (player.skills.E.duration % 10 === 0) {
+                            createDamageText(enemy.x, enemy.y - 20, whirlDamage, '#88ffff');
+                        }
+                        createParticles(enemy.x, enemy.y, '#88ffff', 2);
+
+                        if (enemy.health <= 0) {
+                            player.gold += enemy.gold;
+                            totalKills++;
+                            enemiesRemaining--;
+                            playSound('kill');
+                            dropItem(enemy.x, enemy.y, enemy.type === 'elite');
+                        }
+                    }
+                });
+                enemies = enemies.filter(e => e.health > 0);
+
+                if (boss) {
+                    const dist = Math.hypot(boss.x - player.x, boss.y - player.y);
+                    if (dist < whirlRange) {
+                        boss.health -= whirlDamage;
+                        if (player.skills.E.duration % 10 === 0) {
+                            createDamageText(boss.x, boss.y - boss.radius, whirlDamage, '#88ffff');
+                        }
+                        if (boss.health <= 0) {
+                            player.gold += boss.gold;
+                            totalKills++;
+                            enemiesRemaining--;
+                            playSound('kill');
+                            dropItem(boss.x, boss.y, false, true);
+                            document.getElementById('bossHP').style.display = 'none';
+                            boss = null;
+                        } else {
+                            updateBossHP();
+                        }
+                    }
+                }
+
+                updateUI();
+                checkWaveClear();
+            }
+
+            // 아이템 업데이트 및 획득
+            items = items.filter(item => {
+                item.lifetime--;
+
+                // 플레이어와 충돌 체크
+                const dist = Math.hypot(item.x - player.x, item.y - player.y);
+                if (dist < player.radius + item.radius) {
+                    collectItem(item);
+                    return false;
+                }
+
+                // 수명 체크
+                return item.lifetime > 0;
+            });
+
+            // 스킬 UI 업데이트
+            updateSkillUI();
+
+            // 버프 UI 업데이트
+            updateBuffUI();
+
+            // 적 스폰
+            if (enemiesToSpawn > 0) {
+                spawnTimer++;
+                if (spawnTimer >= 50) {
+                    spawnEnemy();
+                    enemiesToSpawn--;
+                    spawnTimer = 0;
+                }
+            }
+
+            // 슬래시 이펙트 업데이트
+            slashEffects = slashEffects.filter(s => {
+                s.life -= 0.15;
+                return s.life > 0;
+            });
+
+            // 스킬 이펙트 업데이트
+            skillEffects = skillEffects.filter(effect => {
+                effect.life -= 0.04;
+
+                if (effect.type === 'warcry' || effect.type === 'ultimate') {
+                    effect.radius += (effect.maxRadius - effect.radius) * 0.2;
+                }
+                if (effect.type === 'whirlwind') {
+                    effect.angle += 0.3;
+                    effect.x = player.x;
+                    effect.y = player.y;
+                }
+                if (effect.type === 'charge' || effect.type === 'roll') {
+                    effect.x = player.x;
+                    effect.y = player.y;
+                }
+                if (effect.type === 'blizzard') {
+                    effect.x = player.x;
+                    effect.y = player.y;
+                    effect.life = player.buffs.blizzard > 0 ? 1 : 0;
+                }
+                if (effect.type === 'meteor') {
+                    effect.y += 15;
+                    if (effect.y >= effect.targetY) {
+                        // 메테오 착지 - 폭발
+                        const radius = 60;
+                        enemies.forEach(enemy => {
+                            const dist = Math.hypot(enemy.x - effect.targetX, enemy.y - effect.targetY);
+                            if (dist < radius) {
+                                enemy.health -= effect.damage;
+                                createDamageText(enemy.x, enemy.y - 20, effect.damage, '#ff6600');
+                                if (enemy.health <= 0) {
+                                    player.gold += enemy.gold;
+                                    totalKills++;
+                                    enemiesRemaining--;
+                                    dropItem(enemy.x, enemy.y, enemy.type === 'elite');
+                                }
+                            }
+                        });
+                        enemies = enemies.filter(e => e.health > 0);
+                        createParticles(effect.targetX, effect.targetY, '#ff6600', 20);
+                        playSound('hit');
+                        effect.life = 0;
+                    }
+                }
+                if (effect.type === 'arrowRain') {
+                    effect.duration--;
+                    // 범위 내 적에게 지속 피해
+                    if (effect.duration % 10 === 0) {
+                        enemies.forEach(enemy => {
+                            const dist = Math.hypot(enemy.x - effect.x, enemy.y - effect.y);
+                            if (dist < effect.radius) {
+                                enemy.health -= effect.damage;
+                                createDamageText(enemy.x, enemy.y - 20, Math.floor(effect.damage), '#88ff88');
+                                createParticles(enemy.x, enemy.y, '#88ff88', 2);
+                                if (enemy.health <= 0) {
+                                    player.gold += enemy.gold;
+                                    totalKills++;
+                                    enemiesRemaining--;
+                                    dropItem(enemy.x, enemy.y, enemy.type === 'elite');
+                                }
+                            }
+                        });
+                        enemies = enemies.filter(e => e.health > 0);
+                    }
+                    if (effect.duration <= 0) effect.life = 0;
+                }
+
+                return effect.life > 0;
+            });
+
+            // 투사체 업데이트
+            projectiles = projectiles.filter(proj => {
+                proj.x += proj.vx;
+                proj.y += proj.vy;
+
+                // 화면 밖 체크
+                if (proj.x < -50 || proj.x > canvas.width + 50 ||
+                    proj.y < -50 || proj.y > canvas.height + 50) {
+                    return false;
+                }
+
+                // 적 충돌
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    const dist = Math.hypot(proj.x - enemy.x, proj.y - enemy.y);
+                    if (dist < proj.radius + enemy.radius) {
+                        // 관통 화살은 같은 적 두번 안맞음
+                        if (proj.piercing && proj.hitEnemies && proj.hitEnemies.includes(i)) continue;
+
+                        enemy.health -= proj.damage;
+                        playSound('hit');
+                        createParticles(proj.x, proj.y, proj.color, 5);
+                        createDamageText(enemy.x, enemy.y - 20, proj.damage, '#ffff00');
+
+                        if (enemy.health <= 0) {
+                            player.gold += enemy.gold;
+                            totalKills++;
+                            enemiesRemaining--;
+                            playSound('kill');
+                            createParticles(enemy.x, enemy.y, '#ff4444', 15);
+                            dropItem(enemy.x, enemy.y, enemy.type === 'elite');
+                            enemies.splice(i, 1);
+                            updateUI();
+                            checkWaveClear();
+                        }
+
+                        // 폭발 투사체
+                        if (proj.explosive) {
+                            createParticles(proj.x, proj.y, '#ff6600', 20);
+                            enemies.forEach(e => {
+                                const d = Math.hypot(e.x - proj.x, e.y - proj.y);
+                                if (d < proj.explosionRadius) {
+                                    e.health -= proj.damage * 0.5;
+                                    createDamageText(e.x, e.y - 20, Math.floor(proj.damage * 0.5), '#ff6600');
+                                    if (e.health <= 0) {
+                                        player.gold += e.gold;
+                                        totalKills++;
+                                        enemiesRemaining--;
+                                        dropItem(e.x, e.y, e.type === 'elite');
+                                    }
+                                }
+                            });
+                            enemies = enemies.filter(e => e.health > 0);
+                            return false;
+                        }
+
+                        if (proj.piercing) {
+                            if (!proj.hitEnemies) proj.hitEnemies = [];
+                            proj.hitEnemies.push(i);
+                            continue;
+                        }
+                        return false;
+                    }
+                }
+
+                // 보스 충돌
+                if (boss) {
+                    const dist = Math.hypot(proj.x - boss.x, proj.y - boss.y);
+                    if (dist < proj.radius + boss.radius) {
+                        boss.health -= proj.damage;
+                        playSound('boss');
+                        createParticles(proj.x, proj.y, proj.color, 8);
+                        createDamageText(boss.x, boss.y - boss.radius, proj.damage, '#ffff00');
+
+                        if (boss.health <= 0) {
+                            player.gold += boss.gold;
+                            totalKills++;
+                            enemiesRemaining--;
+                            playSound('kill');
+                            createParticles(boss.x, boss.y, boss.color1, 30);
+                            dropItem(boss.x, boss.y, false, true);
+                            document.getElementById('bossHP').style.display = 'none';
+                            boss = null;
+                            updateUI();
+                            checkWaveClear();
+                        } else {
+                            updateBossHP();
+                        }
+
+                        if (proj.explosive) {
+                            createParticles(proj.x, proj.y, '#ff6600', 20);
+                        }
+                        if (!proj.piercing) return false;
+                    }
+                }
+
+                return true;
+            });
+
+            // 적 업데이트
+            enemies.forEach(enemy => updateEnemy(enemy));
+
+            // 보스 업데이트
+            updateBoss();
+
+            // NPC 이동
+            npcs.forEach(npc => {
+                if (Math.random() < 0.02) {
+                    npc.targetX = npc.homeX + (Math.random() - 0.5) * 60;
+                    npc.targetY = npc.homeY + (Math.random() - 0.5) * 60;
+                }
+                if (npc.targetX) {
+                    const dx = npc.targetX - npc.x;
+                    const dy = npc.targetY - npc.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist > 2) {
+                        npc.x += (dx / dist) * 0.5;
+                        npc.y += (dy / dist) * 0.5;
+                    }
+                }
+            });
+
+            // 파티클 업데이트
+            particles = particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.025;
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+                return p.life > 0;
+            });
+
+            // 데미지 텍스트 업데이트
+            damageTexts = damageTexts.filter(dt => {
+                dt.y -= 1.5;
+                dt.life -= 0.025;
+                return dt.life > 0;
+            });
+        }
+
+        function checkWaveClear() {
+            if (enemies.length === 0 && enemiesToSpawn === 0 && !boss) {
+                wave++;
+                player.gold += wave * 15;
+                updateUI();
+                openShop();
+            }
+        }
+
+        function draw() {
+            // 배경 (잔디)
+            ctx.fillStyle = '#3a5a3a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 배경 패턴
+            ctx.fillStyle = '#4a6a4a';
+            for (let x = 0; x < canvas.width; x += 30) {
+                for (let y = 0; y < canvas.height; y += 30) {
+                    if ((x + y) % 60 === 0) {
+                        ctx.fillRect(x, y, 15, 15);
+                    }
+                }
+            }
+
+            // 동서남북 경로 표시
+            ctx.fillStyle = '#5a4a3a';
+            ctx.fillRect(0, centerY - 40, canvas.width, 80);
+            ctx.fillRect(centerX - 40, 0, 80, canvas.height);
+
+            // 마을 영역
+            ctx.fillStyle = '#6a5a4a';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 150, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#7a6a5a';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 120, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 건물들
+            buildings.forEach(b => {
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(b.x + 5, b.y + 5, b.width, b.height);
+
+                ctx.fillStyle = b.color;
+                ctx.fillRect(b.x, b.y, b.width, b.height);
+
+                ctx.fillStyle = '#8B0000';
+                ctx.beginPath();
+                ctx.moveTo(b.x - 5, b.y);
+                ctx.lineTo(b.x + b.width / 2, b.y - 15);
+                ctx.lineTo(b.x + b.width + 5, b.y);
+                ctx.closePath();
+                ctx.fill();
+            });
+
+            // 마을 중심부
+            const gradient = ctx.createRadialGradient(village.x, village.y, 0, village.x, village.y, village.radius);
+            gradient.addColorStop(0, '#88ccff');
+            gradient.addColorStop(0.5, '#4488cc');
+            gradient.addColorStop(1, '#224466');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(village.x, village.y, village.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(100, 200, 255, 0.5)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(village.x, village.y, village.radius + 5 + Math.sin(Date.now() / 200) * 3, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // NPC들
+            npcs.forEach(npc => {
+                ctx.fillStyle = npc.color;
+                ctx.beginPath();
+                ctx.arc(npc.x, npc.y, npc.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#FFE4C4';
+                ctx.beginPath();
+                ctx.arc(npc.x, npc.y - 6, 6, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 아이템
+            items.forEach(item => {
+                const itemData = itemTypes[item.type];
+                const bob = Math.sin(Date.now() / 200 + item.bobOffset) * 3;
+
+                // 빛나는 효과
+                ctx.globalAlpha = 0.3 + Math.sin(Date.now() / 150) * 0.2;
+                ctx.fillStyle = itemData.color;
+                ctx.beginPath();
+                ctx.arc(item.x, item.y + bob, item.radius + 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 아이템 배경
+                ctx.globalAlpha = item.lifetime < 120 ? (item.lifetime / 120) : 1; // 사라지기 전 깜빡임
+                ctx.fillStyle = item.isRare ? '#442244' : '#333';
+                ctx.beginPath();
+                ctx.arc(item.x, item.y + bob, item.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 테두리
+                ctx.strokeStyle = itemData.color;
+                ctx.lineWidth = item.isRare ? 3 : 2;
+                ctx.beginPath();
+                ctx.arc(item.x, item.y + bob, item.radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // 아이콘
+                ctx.fillStyle = '#fff';
+                ctx.font = `${item.radius}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(itemData.icon, item.x, item.y + bob);
+
+                ctx.globalAlpha = 1;
+            });
+
+            // 파티클
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius * p.life, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            // 슬래시 이펙트
+            slashEffects.forEach(s => {
+                ctx.globalAlpha = s.life;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius * (1 - s.life * 0.3), s.angle - 0.8, s.angle + 0.8);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#88ddff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius * (1 - s.life * 0.3) + 5, s.angle - 0.6, s.angle + 0.6);
+                ctx.stroke();
+            });
+            ctx.globalAlpha = 1;
+
+            // 스킬 이펙트
+            skillEffects.forEach(effect => {
+                ctx.globalAlpha = effect.life;
+
+                if (effect.type === 'charge') {
+                    // 돌진 잔상
+                    ctx.fillStyle = '#00ffff';
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, player.radius * effect.life, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (effect.type === 'warcry') {
+                    // 함성 충격파
+                    ctx.strokeStyle = '#ffff00';
+                    ctx.lineWidth = 5 * effect.life;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.strokeStyle = '#ffaa00';
+                    ctx.lineWidth = 3 * effect.life;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius * 0.8, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                if (effect.type === 'whirlwind') {
+                    // 회전베기
+                    ctx.strokeStyle = '#88ffff';
+                    ctx.lineWidth = 6;
+                    for (let i = 0; i < 4; i++) {
+                        const angle = effect.angle + (Math.PI / 2) * i;
+                        ctx.beginPath();
+                        ctx.arc(effect.x, effect.y, effect.radius, angle - 0.5, angle + 0.5);
+                        ctx.stroke();
+                    }
+
+                    ctx.fillStyle = 'rgba(136, 255, 255, 0.2)';
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (effect.type === 'ultimate') {
+                    // 대지분쇄
+                    // 외곽 충격파
+                    ctx.strokeStyle = '#ff00ff';
+                    ctx.lineWidth = 8 * effect.life;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // 내부 파동
+                    ctx.fillStyle = `rgba(255, 0, 255, ${0.3 * effect.life})`;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius * 0.8, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // 균열 효과
+                    ctx.strokeStyle = '#ff44ff';
+                    ctx.lineWidth = 3;
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (Math.PI / 4) * i;
+                        ctx.beginPath();
+                        ctx.moveTo(effect.x, effect.y);
+                        ctx.lineTo(
+                            effect.x + Math.cos(angle) * effect.radius * effect.life,
+                            effect.y + Math.sin(angle) * effect.radius * effect.life
+                        );
+                        ctx.stroke();
+                    }
+                }
+
+                // 텔레포트 이펙트
+                if (effect.type === 'teleport') {
+                    ctx.strokeStyle = '#aa66ff';
+                    ctx.lineWidth = 3;
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (Math.PI / 4) * i + effect.life * 2;
+                        ctx.beginPath();
+                        ctx.moveTo(effect.x, effect.y);
+                        ctx.lineTo(
+                            effect.x + Math.cos(angle) * 40 * effect.life,
+                            effect.y + Math.sin(angle) * 40 * effect.life
+                        );
+                        ctx.stroke();
+                    }
+                }
+
+                // 블리자드 이펙트
+                if (effect.type === 'blizzard') {
+                    ctx.fillStyle = `rgba(136, 200, 255, ${0.2 * effect.life})`;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = `rgba(200, 230, 255, ${0.5 * effect.life})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                // 메테오 이펙트
+                if (effect.type === 'meteor') {
+                    // 그림자
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                    ctx.beginPath();
+                    ctx.ellipse(effect.targetX, effect.targetY, 30, 15, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // 메테오 본체
+                    const grad = ctx.createRadialGradient(effect.x, effect.y, 0, effect.x, effect.y, effect.radius);
+                    grad.addColorStop(0, '#ffff00');
+                    grad.addColorStop(0.5, '#ff6600');
+                    grad.addColorStop(1, '#ff0000');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // 화살비 이펙트
+                if (effect.type === 'arrowRain') {
+                    ctx.fillStyle = `rgba(100, 255, 100, ${0.15})`;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#88ff88';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // 화살 파티클
+                    for (let i = 0; i < 3; i++) {
+                        const ax = effect.x + (Math.random() - 0.5) * effect.radius * 2;
+                        const ay = effect.y + (Math.random() - 0.5) * effect.radius * 2;
+                        ctx.strokeStyle = '#66ff66';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(ax, ay);
+                        ctx.lineTo(ax, ay + 15);
+                        ctx.stroke();
+                    }
+                }
+
+                // 다중사격 버프 이펙트
+                if (effect.type === 'multishot') {
+                    ctx.strokeStyle = '#88ff88';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, 30, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                // 구르기 이펙트
+                if (effect.type === 'roll') {
+                    ctx.fillStyle = `rgba(100, 255, 100, ${effect.life * 0.5})`;
+                    ctx.beginPath();
+                    ctx.arc(effect.x, effect.y, player.radius * effect.life, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            ctx.globalAlpha = 1;
+
+            // 투사체
+            projectiles.forEach(proj => {
+                ctx.fillStyle = proj.color;
+                ctx.shadowColor = proj.color;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 관통 화살은 꼬리 이펙트
+                if (proj.piercing) {
+                    ctx.strokeStyle = proj.color;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(proj.x, proj.y);
+                    ctx.lineTo(proj.x - proj.vx * 2, proj.y - proj.vy * 2);
+                    ctx.stroke();
+                }
+
+                // 폭발 투사체는 불꽃 이펙트
+                if (proj.explosive) {
+                    ctx.fillStyle = '#ffff00';
+                    ctx.beginPath();
+                    ctx.arc(proj.x - proj.vx * 0.5, proj.y - proj.vy * 0.5, proj.radius * 0.6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+            });
+
+            // 적들
+            enemies.forEach(enemy => {
+                const grad = ctx.createRadialGradient(enemy.x, enemy.y, 0, enemy.x, enemy.y, enemy.radius);
+                if (enemy.type === 'elite') {
+                    grad.addColorStop(0, '#ff00ff');
+                    grad.addColorStop(1, '#660066');
+                } else {
+                    grad.addColorStop(0, '#ff4444');
+                    grad.addColorStop(1, '#660000');
+                }
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 눈
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(enemy.x - 4, enemy.y - 3, 3, 0, Math.PI * 2);
+                ctx.arc(enemy.x + 4, enemy.y - 3, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(enemy.x - 4, enemy.y - 3, 1.5, 0, Math.PI * 2);
+                ctx.arc(enemy.x + 4, enemy.y - 3, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 체력바
+                const barWidth = enemy.radius * 2;
+                const healthPercent = enemy.health / enemy.maxHealth;
+                ctx.fillStyle = '#333';
+                ctx.fillRect(enemy.x - barWidth/2, enemy.y - enemy.radius - 10, barWidth, 4);
+                ctx.fillStyle = healthPercent > 0.3 ? '#4f4' : '#f44';
+                ctx.fillRect(enemy.x - barWidth/2, enemy.y - enemy.radius - 10, barWidth * healthPercent, 4);
+            });
+
+            // 보스
+            if (boss) {
+                const bossGrad = ctx.createRadialGradient(boss.x, boss.y, 0, boss.x, boss.y, boss.radius);
+                bossGrad.addColorStop(0, boss.color1);
+                bossGrad.addColorStop(1, boss.color2);
+                ctx.fillStyle = bossGrad;
+                ctx.beginPath();
+                ctx.arc(boss.x, boss.y, boss.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(boss.x, boss.y, boss.radius - 5, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = '#ff0';
+                ctx.shadowColor = '#ff0';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(boss.x - 15, boss.y - 10, 8, 0, Math.PI * 2);
+                ctx.arc(boss.x + 15, boss.y - 10, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(boss.x - 15, boss.y - 10, 4, 0, Math.PI * 2);
+                ctx.arc(boss.x + 15, boss.y - 10, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 플레이어
+            const playerColor = player.classData ? player.classData.color : '#66aaff';
+            const playerGrad = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, player.radius);
+            playerGrad.addColorStop(0, playerColor);
+            playerGrad.addColorStop(1, shadeColor(playerColor, -40));
+            ctx.fillStyle = playerGrad;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 보호막 표시
+            if (player.buffs.shield > 0) {
+                ctx.strokeStyle = 'rgba(65, 105, 225, 0.7)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius + 5, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // 플레이어 방향 표시 (무기)
+            if (player.direction.x !== 0 || player.direction.y !== 0) {
+                const angle = Math.atan2(player.direction.y, player.direction.x);
+                const weaponX = player.x + Math.cos(angle) * (player.radius + 5);
+                const weaponY = player.y + Math.sin(angle) * (player.radius + 5);
+
+                ctx.save();
+                ctx.translate(weaponX, weaponY);
+                ctx.rotate(angle + (player.isAttacking ? 0.3 : 0));
+
+                // 직업별 무기
+                if (selectedClass === 'warrior') {
+                    // 검
+                    const weaponLen = player.isAttacking ? 30 : 20;
+                    ctx.fillStyle = player.isAttacking ? '#ffffff' : '#cccccc';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -3);
+                    ctx.lineTo(weaponLen, 0);
+                    ctx.lineTo(0, 3);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(-8, -4, 10, 8);
+                } else if (selectedClass === 'mage') {
+                    // 지팡이
+                    ctx.strokeStyle = '#8B4513';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(-5, 0);
+                    ctx.lineTo(25, 0);
+                    ctx.stroke();
+                    ctx.fillStyle = '#aa66ff';
+                    ctx.beginPath();
+                    ctx.arc(25, 0, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (selectedClass === 'archer') {
+                    // 활
+                    ctx.strokeStyle = '#8B4513';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 15, -0.8, 0.8);
+                    ctx.stroke();
+                    ctx.strokeStyle = '#ddd';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(15 * Math.cos(-0.8), 15 * Math.sin(-0.8));
+                    ctx.lineTo(15 * Math.cos(0.8), 15 * Math.sin(0.8));
+                    ctx.stroke();
+                } else {
+                    // 기본 (선택 전)
+                    const weaponLen = 20;
+                    ctx.fillStyle = '#cccccc';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -3);
+                    ctx.lineTo(weaponLen, 0);
+                    ctx.lineTo(0, 3);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+
+            // 공격 범위 표시 (공격 중일 때)
+            if (player.isAttacking && (player.direction.x !== 0 || player.direction.y !== 0)) {
+                const angle = Math.atan2(player.direction.y, player.direction.x);
+                ctx.globalAlpha = 0.2;
+                ctx.fillStyle = '#88ddff';
+                ctx.beginPath();
+                ctx.moveTo(player.x, player.y);
+                ctx.arc(player.x, player.y, player.attackRange + player.radius, angle - 0.8, angle + 0.8);
+                ctx.closePath();
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
+            // 플레이어 체력바
+            const pBarWidth = 50;
+            const pHealthPercent = player.health / player.maxHealth;
+            ctx.fillStyle = '#333';
+            ctx.fillRect(player.x - pBarWidth/2, player.y + player.radius + 8, pBarWidth, 6);
+            ctx.fillStyle = pHealthPercent > 0.3 ? '#4f4' : '#f44';
+            ctx.fillRect(player.x - pBarWidth/2, player.y + player.radius + 8, pBarWidth * pHealthPercent, 6);
+
+            // 데미지 텍스트
+            damageTexts.forEach(dt => {
+                ctx.globalAlpha = dt.life;
+                ctx.fillStyle = dt.color;
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(dt.text, dt.x, dt.y);
+            });
+            ctx.globalAlpha = 1;
+
+            // 방향 표시 (동서남북)
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('북', centerX, 20);
+            ctx.fillText('남', centerX, canvas.height - 10);
+            ctx.fillText('서', 15, centerY);
+            ctx.fillText('동', canvas.width - 15, centerY);
+        }
+
+        function updateUI() {
+            document.getElementById('health').textContent = `HP: ${Math.floor(player.health)}/${player.maxHealth}`;
+            const totalAttack = player.attack + (player.buffs.attackBoost > 0 ? Math.floor(player.attack * 0.5) : 0);
+            document.getElementById('attack').textContent = `공격력: ${totalAttack}${player.buffs.attackBoost > 0 ? ' (+50%)' : ''}`;
+            document.getElementById('gold').textContent = `골드: ${player.gold}`;
+            document.getElementById('wave').textContent = `웨이브: ${wave}`;
+            document.getElementById('enemies').textContent = `남은 적: ${enemiesRemaining}`;
+        }
+
+        function updateSkillUI() {
+            const skills = ['Q', 'W', 'E', 'R'];
+            skills.forEach(key => {
+                const elem = document.getElementById('skill' + key);
+                const skill = player.skills[key];
+                const cdElem = elem.querySelector('.skill-cooldown');
+
+                elem.classList.remove('ready', 'cooldown', 'active');
+
+                if (skill.active) {
+                    elem.classList.add('active');
+                } else if (skill.cooldown > 0) {
+                    elem.classList.add('cooldown');
+                    cdElem.textContent = Math.ceil(skill.cooldown / 60);
+                } else {
+                    elem.classList.add('ready');
+                    cdElem.textContent = '';
+                }
+            });
+        }
+
+        function updateBuffUI() {
+            const buffDiv = document.getElementById('buffIndicator');
+            let buffs = [];
+
+            if (player.buffs.attackBoost > 0) {
+                buffs.push(`⚔️ 공격력 증가 ${Math.ceil(player.buffs.attackBoost / 60)}초`);
+            }
+            if (player.buffs.speedBoost > 0) {
+                buffs.push(`💨 이속 증가 ${Math.ceil(player.buffs.speedBoost / 60)}초`);
+            }
+            if (player.buffs.shield > 0) {
+                buffs.push(`🛡️ 보호막 ${player.buffs.shieldHP}HP`);
+            }
+            if (player.buffs.charging) {
+                buffs.push(`⚡ 돌진 중!`);
+            }
+            if (player.buffs.invincible > 0) {
+                buffs.push(`✨ 무적`);
+            }
+            if (player.skills.E.active) {
+                buffs.push(`🌀 회전베기`);
+            }
+
+            buffDiv.innerHTML = buffs.join('<br>');
+        }
+
+        function getEffectiveAttack() {
+            let atk = player.attack;
+            if (player.buffs.attackBoost > 0) {
+                atk = Math.floor(atk * 1.5);
+            }
+            return atk;
+        }
+
+        function updateVillageHP() {
+            const percent = (village.health / village.maxHealth) * 100;
+            document.getElementById('villageHPFill').style.width = percent + '%';
+            document.getElementById('villageHPText').textContent = `${Math.floor(village.health)} / ${village.maxHealth}`;
+
+            if (percent < 30) {
+                document.getElementById('villageHPFill').style.background = 'linear-gradient(90deg, #a44, #c66)';
+            } else if (percent < 60) {
+                document.getElementById('villageHPFill').style.background = 'linear-gradient(90deg, #aa4, #cc6)';
+            } else {
+                document.getElementById('villageHPFill').style.background = 'linear-gradient(90deg, #4a4, #6c6)';
+            }
+        }
+
+        function updateBossHP() {
+            if (!boss) return;
+            const percent = (boss.health / boss.maxHealth) * 100;
+            document.getElementById('bossHPFill').style.width = percent + '%';
+        }
+
+        function gameOver(reason) {
+            gameState = 'gameover';
+            stopBGM();
+            document.getElementById('gameOverReason').textContent = reason;
+            document.getElementById('finalWave').textContent = `도달 웨이브: ${wave}`;
+            document.getElementById('finalKills').textContent = `처치한 적: ${totalKills}`;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        function restartGame() {
+            player.x = centerX;
+            player.y = centerY + 150;
+            player.gold = 0;
+            player.direction = { x: 0, y: -1 };
+            player.attackCost = 50;
+            player.speedCost = 40;
+            player.healthCost = 60;
+            player.rangeCost = 80;
+            player.isAttacking = false;
+            player.attackCooldown = 0;
+
+            // 스킬 초기화
+            for (let key in player.skills) {
+                player.skills[key].cooldown = 0;
+                player.skills[key].active = false;
+                player.skills[key].duration = 0;
+            }
+
+            // 버프 초기화
+            player.buffs.attackBoost = 0;
+            player.buffs.speedBoost = 0;
+            player.buffs.charging = false;
+            player.buffs.chargeSpeed = 0;
+            player.buffs.invincible = 0;
+            player.buffs.shield = 0;
+            player.buffs.shieldHP = 0;
+            player.buffs.multiShot = 0;
+            player.buffs.blizzard = 0;
+
+            village.health = village.maxHealth;
+
+            wave = 1;
+            totalKills = 0;
+            slashEffects = [];
+            skillEffects = [];
+            projectiles = [];
+            enemies = [];
+            particles = [];
+            damageTexts = [];
+            items = [];
+            boss = null;
+            selectedClass = null;
+
+            initNPCs();
+
+            gameState = 'classSelect';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('bossHP').style.display = 'none';
+            document.getElementById('classSelect').style.display = 'flex';
+            updateVillageHP();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 게임 시작 (직업 선택 화면)
+        initNPCs();
+        updateVillageHP();
+        gameLoop();
+    </script>
+</body>
+</html>
